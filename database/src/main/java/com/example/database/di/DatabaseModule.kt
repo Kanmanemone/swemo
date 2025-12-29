@@ -2,7 +2,6 @@ package com.example.database.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.database.MainDAO
 import com.example.database.MainDatabase
 import dagger.Module
 import dagger.Provides
@@ -23,10 +22,5 @@ object DatabaseModule {
             MainDatabase::class.java,
             "main_database"
         ).build()
-    }
-
-    @Provides
-    fun provideMainDAO(database: MainDatabase): MainDAO {
-        return database.mainDAO
     }
 }
