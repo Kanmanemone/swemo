@@ -11,6 +11,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -18,10 +19,12 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
 rootProject.name = "swemo"
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 include(":database")
 include(":designsystem")
 include(":common")
 include(":datastore")
+include(":data")

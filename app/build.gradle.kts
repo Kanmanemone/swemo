@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Module
-    implementation(project(":datastore"))
-    implementation(project(":designsystem"))
+    implementation(projects.datastore)
+    implementation(projects.designsystem)
+    implementation(projects.data)
 }
