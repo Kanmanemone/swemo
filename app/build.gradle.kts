@@ -75,5 +75,5 @@ dependencies {
     // Module
     implementation(projects.datastore)
     implementation(projects.designsystem)
-    implementation(projects.data)
+    implementation(projects.feature.test)
 }
