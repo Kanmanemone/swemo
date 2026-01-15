@@ -27,8 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.data.FakeMemoRepository
-import com.example.data.Memo
 import com.example.data.MemoRepository
+import com.example.model.Category
+import com.example.model.Memo
+import com.example.model.MemoContent
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +39,10 @@ fun TestScreen() {
     val scope = rememberCoroutineScope()
 
     val repository: MemoRepository = remember { FakeMemoRepository() }
-    var selectedCategory: String? by remember { mutableStateOf(null) }
+    val categoriesFromRepo by repository.getCategory().collectAsState(initial = emptyList())
+    val allMemosCategory = Category(id = "-1", name = "전체")
+    val categories = listOf(allMemosCategory) + categoriesFromRepo
+    var selectedCategory: Category by remember { mutableStateOf(allMemosCategory) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     ModalNavigationDrawer(
@@ -53,16 +58,14 @@ fun TestScreen() {
                     title = { Text("Category") }
                 )
 
-                val categories by repository.getCategory().collectAsState(initial = emptyList())
-                val categoryNames = listOf<String?>(null) + categories.map { it.name }
-                categoryNames.forEach { categoryName ->
+                categories.forEach { category ->
                     TextButton(
                         onClick = {
-                            selectedCategory = categoryName
+                            selectedCategory = category
                             scope.launch { drawerState.close() }
                         }
                     ) {
-                        Text(text = categoryName ?: "전체")
+                        Text(text = category.name)
                     }
                 }
             }
@@ -73,7 +76,7 @@ fun TestScreen() {
         ) {
             TopAppBar(
                 title = {
-                    Text(selectedCategory ?: "전체")
+                    Text(selectedCategory.name)
                 },
                 navigationIcon = {
                     IconButton(
@@ -91,7 +94,11 @@ fun TestScreen() {
                     IconButton(
                         onClick = {
                             repository.insertMemo(
-                                Memo(content = "Inserted memo (${selectedCategory})", categoryName = selectedCategory)
+                                Memo(
+                                    categoryId = selectedCategory.id,
+                                    id = "0",
+                                    contents = listOf(MemoContent(label = "content", text = "Inserted memo (${selectedCategory.name})"))
+                                )
                             )
                         }
                     ) {
@@ -103,8 +110,14 @@ fun TestScreen() {
                 }
             )
 
-            val memos by repository.getMemosByCategory(selectedCategory).collectAsState(initial = emptyList())
-            val memosText = memos.joinToString("\n") { it.content }
+            val memosFlow = remember(selectedCategory.id) {
+                when (selectedCategory.id) {
+                    allMemosCategory.id -> repository.getMemos()
+                    else -> repository.getMemosByCategory(selectedCategory.id)
+                }
+            }
+            val memos by memosFlow.collectAsState(initial = emptyList())
+            val memosText = memos.joinToString("\n") { it.contents.firstOrNull()?.text ?: "null" }
             Text(
                 text = memosText,
                 modifier = Modifier.fillMaxWidth()

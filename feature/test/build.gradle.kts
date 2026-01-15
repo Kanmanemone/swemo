@@ -45,4 +45,5 @@ dependencies {
 
     // Module
     implementation(projects.data)
+    implementation(projects.model)
 }
