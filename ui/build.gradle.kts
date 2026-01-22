@@ -1,11 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.compose)
 }
 
 android {
-    namespace = "com.example.test"
+    namespace = "com.example.ui"
     compileSdk = 36
 
     defaultConfig {
@@ -31,7 +30,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -39,16 +37,11 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
 
+    // Preview
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.material3)
-
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Module
-    implementation(projects.data)
     implementation(projects.model)
-    implementation(projects.designsystem)
-    implementation(projects.ui)
 }

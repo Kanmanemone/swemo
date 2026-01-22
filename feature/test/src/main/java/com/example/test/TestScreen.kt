@@ -25,26 +25,73 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import com.example.data.FakeMemoRepository
 import com.example.data.MemoRepository
+import com.example.designsystem.SwemoTheme
 import com.example.model.Category
 import com.example.model.Memo
 import com.example.model.MemoContent
+import com.example.ui.DevicePreviews
+import com.example.ui.MemoPreviewParameterProvider
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+// state 주입용
 @Composable
-fun TestScreen() {
-    val scope = rememberCoroutineScope()
-
+fun TestScreen(viewModel: ViewModel? = null) {
     val repository: MemoRepository = remember { FakeMemoRepository() }
+
+    // category
     val categoriesFromRepo by repository.getCategory().collectAsState(initial = emptyList())
-    val allMemosCategory = Category(id = "-1", name = "전체")
+    val allMemosCategory = Category(id = "-1", name = "전체 메모")
     val categories = listOf(allMemosCategory) + categoriesFromRepo
     var selectedCategory: Category by remember { mutableStateOf(allMemosCategory) }
 
+    // memo
+    val memosFlow = remember(selectedCategory.id) {
+        when (selectedCategory.id) {
+            allMemosCategory.id -> repository.getMemos()
+            else -> repository.getMemosByCategory(selectedCategory.id)
+        }
+    }
+    val memos by memosFlow.collectAsState(initial = emptyList())
+
+    TestScreen(
+        categories = categories,
+        selectedCategory = selectedCategory,
+        memos = memos,
+        // events
+        onCategorySelected = { category: Category ->
+            selectedCategory = category
+        },
+        onAddMemoClick = {
+            repository.insertMemo(
+                Memo(
+                    categoryId = selectedCategory.id,
+                    id = "0",
+                    contents = listOf(MemoContent(label = "content", text = "Inserted memo (${selectedCategory.name})"))
+                )
+            )
+        },
+    )
+}
+
+// 순수 UI
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TestScreen(
+    categories: List<Category>,
+    selectedCategory: Category,
+    memos: List<Memo>,
+    // events
+    onCategorySelected: (Category) -> Unit,
+    onAddMemoClick: () -> Unit,
+) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -61,7 +108,7 @@ fun TestScreen() {
                 categories.forEach { category ->
                     TextButton(
                         onClick = {
-                            selectedCategory = category
+                            onCategorySelected(category)
                             scope.launch { drawerState.close() }
                         }
                     ) {
@@ -93,13 +140,7 @@ fun TestScreen() {
                 actions = {
                     IconButton(
                         onClick = {
-                            repository.insertMemo(
-                                Memo(
-                                    categoryId = selectedCategory.id,
-                                    id = "0",
-                                    contents = listOf(MemoContent(label = "content", text = "Inserted memo (${selectedCategory.name})"))
-                                )
-                            )
+                            onAddMemoClick()
                         }
                     ) {
                         Icon(
@@ -110,18 +151,29 @@ fun TestScreen() {
                 }
             )
 
-            val memosFlow = remember(selectedCategory.id) {
-                when (selectedCategory.id) {
-                    allMemosCategory.id -> repository.getMemos()
-                    else -> repository.getMemosByCategory(selectedCategory.id)
-                }
-            }
-            val memos by memosFlow.collectAsState(initial = emptyList())
-            val memosText = memos.joinToString("\n") { it.contents.firstOrNull()?.text ?: "null" }
+            val memosText = memos.joinToString("\n") { it.contents.first().text }
             Text(
                 text = memosText,
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+@DevicePreviews
+@Composable
+fun TestScreenPreview(
+    @PreviewParameter(MemoPreviewParameterProvider::class)
+    memos: List<Memo>,
+) {
+    SwemoTheme {
+        TestScreen(
+            categories = emptyList(),
+            selectedCategory = Category(id = "-1", name = "전체 메모"),
+            memos = memos,
+            // events
+            onCategorySelected = {},
+            onAddMemoClick = {},
+        )
     }
 }
