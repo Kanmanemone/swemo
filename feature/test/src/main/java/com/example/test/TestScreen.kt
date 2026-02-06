@@ -64,6 +64,7 @@ fun TestScreen(viewModel: ViewModel? = null) {
         id = "0",
         contents = listOf(
             MemoContent(label = "label 2", text = "Fake memo 7"),
+            MemoContent(label = "label 3", text = "Fake memo 8"),
         )
     )
 

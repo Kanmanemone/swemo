@@ -2,10 +2,8 @@ package com.example.test
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,16 +24,11 @@ fun EditableFieldList(
         content = {
             memo.contents.forEach { (label, text) ->
                 item {
-                    TextField(
-                        value = text,
-                        onValueChange = {
-
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = {
-                            Text(label)
-                        }
-                    )
+                    Surface(
+                        tonalElevation = 20.dp
+                    ) {
+                        MemoContentTextField(label = label, text = text)
+                    }
                 }
             }
         }

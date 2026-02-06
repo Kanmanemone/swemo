@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.designsystem.SwemoTheme
 import com.example.model.Memo
 import com.example.model.MemoContent
+import com.example.ui.DevicePreviews
 
 @Composable
 fun MemoEditor(
@@ -32,11 +32,12 @@ fun MemoEditor(
                 labels = availableLabels,
                 modifier = Modifier.fillMaxWidth()
             )
+            MemoEditorActionBar()
         }
     }
 }
 
-@Preview
+@DevicePreviews
 @Composable
 fun MemoEditorPreview() {
     SwemoTheme {
