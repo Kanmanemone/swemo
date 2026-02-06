@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -13,6 +14,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -24,7 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -35,6 +39,7 @@ import com.example.designsystem.SwemoTheme
 import com.example.model.Category
 import com.example.model.Memo
 import com.example.model.MemoContent
+import com.example.ui.CategoryPreviewParameterProvider
 import com.example.ui.DevicePreviews
 import com.example.ui.MemoPreviewParameterProvider
 import kotlinx.coroutines.launch
@@ -71,8 +76,10 @@ fun TestScreen(viewModel: ViewModel? = null) {
         )
     )
 
-    // etc
+    // ui states
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var isMemoEditorVisible by remember { mutableStateOf(false) }
+    var isAddCategoryDialogVisible by remember { mutableStateOf(false) }
 
     TestScreen(
         categories = categories,
@@ -80,7 +87,9 @@ fun TestScreen(viewModel: ViewModel? = null) {
         memos = memos,
         editingMemo = editingMemo,
         allLabels = allLabels,
+        drawerState = drawerState,
         isMemoEditorVisible = isMemoEditorVisible,
+        isAddCategoryDialogVisible = isAddCategoryDialogVisible,
         // events
         onCategorySelected = { category: Category ->
             selectedCategory = category
@@ -97,6 +106,9 @@ fun TestScreen(viewModel: ViewModel? = null) {
         onMemoEditorToggleButtonClick = {
             isMemoEditorVisible = !isMemoEditorVisible
         },
+        onAddCategoryDialogVisibleChange = { visible ->
+            isAddCategoryDialogVisible = visible
+        },
     )
 }
 
@@ -109,13 +121,16 @@ fun TestScreen(
     memos: List<Memo>,
     editingMemo: Memo?,
     allLabels: Set<String>,
+    // ui states
+    drawerState: DrawerState,
     isMemoEditorVisible: Boolean,
+    isAddCategoryDialogVisible: Boolean,
     // events
     onCategorySelected: (Category) -> Unit,
     onAddMemoClick: () -> Unit,
     onMemoEditorToggleButtonClick: () -> Unit,
+    onAddCategoryDialogVisibleChange: (Boolean) -> Unit,
 ) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     ModalNavigationDrawer(
@@ -126,6 +141,9 @@ fun TestScreen(
                 onCategorySelected = { category ->
                     onCategorySelected(category)
                     scope.launch { drawerState.close() }
+                },
+                onAddCategoryButtonClick = {
+                    onAddCategoryDialogVisibleChange(true)
                 }
             )
         }
@@ -199,6 +217,25 @@ fun TestScreen(
             )
         }
     }
+
+    if (isAddCategoryDialogVisible) {
+        AddCategoryDialog(
+            onDismissRequest = {
+                onAddCategoryDialogVisibleChange(false)
+            },
+            onConfirmation = {},
+            icon = ImageVector.vectorResource(R.drawable.add_24dp_5f6368_fill0_wght400_grad0_opsz24),
+            dialogTitle = "Add Category",
+        ) {
+            TextField(
+                value = "",
+                onValueChange = {},
+                placeholder = {
+                    Text("Category name")
+                }
+            )
+        }
+    }
 }
 
 @DevicePreviews
@@ -213,20 +250,15 @@ fun TestScreenPreview_Default(
             selectedCategory = Category(id = "1", name = "category 1"),
             memos = memos,
             allLabels = setOf("label 1", "label 2", "label 3", "label 4", "label 5", "label 6", "label 7", "label 8", "label 9"),
+            drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             isMemoEditorVisible = false,
-            editingMemo = Memo(
-                categoryId = "0",
-                id = "0",
-                contents = listOf(
-                    MemoContent(label = "label 3", text = "Fake memo 7"),
-                    MemoContent(label = "label 5", text = "Fake memo 7"),
-                    MemoContent(label = "label 7", text = "Fake memo 7"),
-                )
-            ),
+            isAddCategoryDialogVisible = false,
+            editingMemo = null,
             // events
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
+            onAddCategoryDialogVisibleChange = {},
         )
     }
 }
@@ -243,7 +275,9 @@ fun TestScreenPreview_MemoEditorVisible(
             selectedCategory = Category(id = "1", name = "category 1"),
             memos = memos,
             allLabels = setOf("label 1", "label 2", "label 3", "label 4", "label 5", "label 6", "label 7", "label 8", "label 9"),
+            drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             isMemoEditorVisible = true,
+            isAddCategoryDialogVisible = false,
             editingMemo = Memo(
                 categoryId = "0",
                 id = "0",
@@ -257,6 +291,32 @@ fun TestScreenPreview_MemoEditorVisible(
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
+            onAddCategoryDialogVisibleChange = {},
+        )
+    }
+}
+
+@DevicePreviews
+@Composable
+fun TestScreenPreview_AddCategoryDialogVisible(
+    @PreviewParameter(CategoryPreviewParameterProvider::class)
+    categories: List<Category>,
+) {
+    SwemoTheme {
+        TestScreen(
+            categories = categories,
+            selectedCategory = Category(id = "1", name = "category 1"),
+            memos = emptyList(),
+            allLabels = emptySet(),
+            drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
+            isMemoEditorVisible = false,
+            isAddCategoryDialogVisible = true,
+            editingMemo = null,
+            // events
+            onCategorySelected = {},
+            onAddMemoClick = {},
+            onMemoEditorToggleButtonClick = {},
+            onAddCategoryDialogVisibleChange = {},
         )
     }
 }

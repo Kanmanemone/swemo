@@ -4,13 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.model.Category
 
@@ -19,6 +22,7 @@ import com.example.model.Category
 fun CategorySelector(
     categories: List<Category>,
     onCategorySelected: (Category) -> Unit,
+    onAddCategoryButtonClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -39,6 +43,17 @@ fun CategorySelector(
             ) {
                 Text(text = category.name)
             }
+        }
+
+        Button(
+            onClick = {
+                onAddCategoryButtonClick()
+            }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.add_24dp_5f6368_fill0_wght400_grad0_opsz24),
+                contentDescription = null
+            )
         }
     }
 }
