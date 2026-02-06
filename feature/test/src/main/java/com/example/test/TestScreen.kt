@@ -1,13 +1,16 @@
 package com.example.test
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -68,12 +71,16 @@ fun TestScreen(viewModel: ViewModel? = null) {
         )
     )
 
+    // etc
+    var isMemoEditorVisible by remember { mutableStateOf(false) }
+
     TestScreen(
         categories = categories,
         selectedCategory = selectedCategory,
         memos = memos,
         editingMemo = editingMemo,
         allLabels = allLabels,
+        isMemoEditorVisible = isMemoEditorVisible,
         // events
         onCategorySelected = { category: Category ->
             selectedCategory = category
@@ -87,6 +94,9 @@ fun TestScreen(viewModel: ViewModel? = null) {
                 )
             )
         },
+        onMemoEditorToggleButtonClick = {
+            isMemoEditorVisible = !isMemoEditorVisible
+        },
     )
 }
 
@@ -99,9 +109,11 @@ fun TestScreen(
     memos: List<Memo>,
     editingMemo: Memo?,
     allLabels: Set<String>,
+    isMemoEditorVisible: Boolean,
     // events
     onCategorySelected: (Category) -> Unit,
     onAddMemoClick: () -> Unit,
+    onMemoEditorToggleButtonClick: () -> Unit,
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -118,64 +130,82 @@ fun TestScreen(
             )
         }
     ) {
-        Column {
-            TopAppBar(
-                title = {
-                    Text(selectedCategory.name)
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            scope.launch { drawerState.open() }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(selectedCategory.name)
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                scope.launch { drawerState.open() }
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.menu_24dp_5f6368_fill0_wght400_grad0_opsz24),
+                                contentDescription = null
+                            )
                         }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.menu_24dp_5f6368_fill0_wght400_grad0_opsz24),
-                            contentDescription = null
-                        )
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                onAddMemoClick()
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.add_24dp_5f6368_fill0_wght400_grad0_opsz24),
+                                contentDescription = null
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            onAddMemoClick()
-                        }
+                )
+            },
+            bottomBar = {
+                if (isMemoEditorVisible) {
+                    Surface(
+                        tonalElevation = 4.dp
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.add_24dp_5f6368_fill0_wght400_grad0_opsz24),
-                            contentDescription = null
+                        MemoEditor(
+                            editingMemo = editingMemo,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            allLabels = allLabels
                         )
                     }
                 }
-            )
-
+            },
+            floatingActionButton = {
+                Button(
+                    onClick = {
+                        onMemoEditorToggleButtonClick()
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.add_notes_24dp_5f6368_fill0_wght400_grad0_opsz24),
+                        contentDescription = null
+                    )
+                }
+            },
+            floatingActionButtonPosition = FabPosition.End,
+        ) { paddingValues ->
             MemoFeed(
                 memos = memos,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .fillMaxSize()
+                    .padding(paddingValues)
             )
-
-            Surface(
-                tonalElevation = 4.dp
-            ) {
-                MemoEditor(
-                    editingMemo = editingMemo,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    allLabels = allLabels
-                )
-            }
         }
     }
 }
 
 @DevicePreviews
 @Composable
-fun TestScreenPreview(
+fun TestScreenPreview_Default(
     @PreviewParameter(MemoPreviewParameterProvider::class)
-    memos: List<Memo>
+    memos: List<Memo>,
 ) {
     SwemoTheme {
         TestScreen(
@@ -183,6 +213,7 @@ fun TestScreenPreview(
             selectedCategory = Category(id = "1", name = "category 1"),
             memos = memos,
             allLabels = setOf("label 1", "label 2", "label 3", "label 4", "label 5", "label 6", "label 7", "label 8", "label 9"),
+            isMemoEditorVisible = false,
             editingMemo = Memo(
                 categoryId = "0",
                 id = "0",
@@ -195,6 +226,37 @@ fun TestScreenPreview(
             // events
             onCategorySelected = {},
             onAddMemoClick = {},
+            onMemoEditorToggleButtonClick = {},
+        )
+    }
+}
+
+@DevicePreviews
+@Composable
+fun TestScreenPreview_MemoEditorVisible(
+    @PreviewParameter(MemoPreviewParameterProvider::class)
+    memos: List<Memo>,
+) {
+    SwemoTheme {
+        TestScreen(
+            categories = emptyList(),
+            selectedCategory = Category(id = "1", name = "category 1"),
+            memos = memos,
+            allLabels = setOf("label 1", "label 2", "label 3", "label 4", "label 5", "label 6", "label 7", "label 8", "label 9"),
+            isMemoEditorVisible = true,
+            editingMemo = Memo(
+                categoryId = "0",
+                id = "0",
+                contents = listOf(
+                    MemoContent(label = "label 3", text = "Fake memo 7"),
+                    MemoContent(label = "label 5", text = "Fake memo 7"),
+                    MemoContent(label = "label 7", text = "Fake memo 7"),
+                )
+            ),
+            // events
+            onCategorySelected = {},
+            onAddMemoClick = {},
+            onMemoEditorToggleButtonClick = {},
         )
     }
 }
