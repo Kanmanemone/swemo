@@ -23,11 +23,8 @@ rootProject.name = "swemo"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
-include(":database")
 include(":designsystem")
-include(":common")
-include(":datastore")
 include(":data")
-include(":feature:test")
+include(":feature:memo")
 include(":model")
 include(":ui")

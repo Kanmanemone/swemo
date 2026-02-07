@@ -73,7 +73,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Module
-    implementation(projects.datastore)
     implementation(projects.designsystem)
-    implementation(projects.feature.test)
+    implementation(projects.feature.memo)
 }
