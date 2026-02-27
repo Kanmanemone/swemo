@@ -18,8 +18,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,9 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import com.example.data.FakeMemoRepository
-import com.example.data.MemoRepository
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.designsystem.icon.SwemoIcons
 import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.components.AddCategoryDialog
@@ -46,86 +43,38 @@ import com.example.ui.DevicePreviews
 import com.example.ui.MemoPreviewParameterProvider
 import kotlinx.coroutines.launch
 
-// state 주입용
 @Composable
-fun MemoScreen(viewModel: ViewModel? = null) {
-    val repository: MemoRepository = remember { FakeMemoRepository() }
+fun MemoScreen(
+    viewModel: MemoViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // category
-    val categories by repository.getCategory().collectAsState(initial = emptyList())
-    var selectedCategory: Category by remember { mutableStateOf(Category(id = "1", name = "category 1")) }
-
-    // memo
-    val memosFlow = remember(selectedCategory.id) {
-        repository.getMemosByCategory(selectedCategory.id)
-    }
-    val memos by memosFlow.collectAsState(initial = emptyList())
-    val allLabels by remember(memos) {
-        derivedStateOf {
-            memos
-                .asSequence()
-                .flatMap { it.contents }
-                .map { it.label }
-                .toSet()
-        }
-    }
-    val editingMemo = Memo(
-        categoryId = "0",
-        id = "0",
-        contents = listOf(
-            MemoContent(label = "label 2", text = "Fake memo 7"),
-            MemoContent(label = "label 3", text = "Fake memo 8"),
-        )
-    )
-
-    // ui states
+    // ui-only states
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var isMemoEditorVisible by remember { mutableStateOf(false) }
     var isAddCategoryDialogVisible by remember { mutableStateOf(false) }
 
     MemoScreen(
-        categories = categories,
-        selectedCategory = selectedCategory,
-        memos = memos,
-        editingMemo = editingMemo,
-        allLabels = allLabels,
+        uiState = uiState,
+        // ui-only states
         drawerState = drawerState,
-        isMemoEditorVisible = isMemoEditorVisible,
         isAddCategoryDialogVisible = isAddCategoryDialogVisible,
         // events
-        onCategorySelected = { category: Category ->
-            selectedCategory = category
-        },
-        onAddMemoClick = {
-            repository.insertMemo(
-                Memo(
-                    categoryId = selectedCategory.id,
-                    id = "0",
-                    contents = listOf(MemoContent(label = "label 4", text = "Inserted memo"))
-                )
-            )
-        },
-        onMemoEditorToggleButtonClick = {
-            isMemoEditorVisible = !isMemoEditorVisible
-        },
+        onCategorySelected = viewModel::selectCategory,
+        onAddMemoClick = viewModel::addMemo,
+        onMemoEditorToggleButtonClick = viewModel::toggleEditor,
         onAddCategoryDialogVisibleChange = { visible ->
             isAddCategoryDialogVisible = visible
         },
     )
 }
 
-// 순수 UI
+// 순수 UI (Stateless)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MemoScreen(
-    categories: List<Category>,
-    selectedCategory: Category,
-    memos: List<Memo>,
-    editingMemo: Memo?,
-    allLabels: Set<String>,
-    // ui states
+    uiState: MemoUiState,
+    // ui-only states
     drawerState: DrawerState,
-    isMemoEditorVisible: Boolean,
     isAddCategoryDialogVisible: Boolean,
     // events
     onCategorySelected: (Category) -> Unit,
@@ -135,11 +84,14 @@ internal fun MemoScreen(
 ) {
     val scope = rememberCoroutineScope()
 
+    // selectedCategory에 값이 담길 때 ui 표시
+    val currentCategory = uiState.selectedCategory ?: return
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             CategorySelector(
-                categories = categories,
+                categories = uiState.categories,
                 onCategorySelected = { category ->
                     onCategorySelected(category)
                     scope.launch { drawerState.close() }
@@ -154,7 +106,7 @@ internal fun MemoScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(selectedCategory.name)
+                        Text(currentCategory.name)
                     },
                     navigationIcon = {
                         IconButton(
@@ -183,16 +135,16 @@ internal fun MemoScreen(
                 )
             },
             bottomBar = {
-                if (isMemoEditorVisible) {
+                if (uiState.editorState.isVisible) {
                     Surface(
                         tonalElevation = 4.dp
                     ) {
                         MemoEditor(
-                            editingMemo = editingMemo,
+                            editingMemo = uiState.editorState.editingMemo,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            allLabels = allLabels
+                            allLabels = uiState.allLabels
                         )
                     }
                 }
@@ -212,7 +164,7 @@ internal fun MemoScreen(
             floatingActionButtonPosition = FabPosition.End,
         ) { paddingValues ->
             MemoFeed(
-                memos = memos,
+                memos = uiState.memos,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
@@ -248,15 +200,14 @@ fun MemoScreenPreview_Default(
 ) {
     SwemoTheme {
         MemoScreen(
-            categories = emptyList(),
-            selectedCategory = Category(id = "1", name = "category 1"),
-            memos = memos,
-            allLabels = setOf("label 1", "label 2", "label 3", "label 4", "label 5", "label 6", "label 7", "label 8", "label 9"),
+            uiState = MemoUiState(
+                categories = emptyList(),
+                selectedCategory = Category(id = "1", name = "category 1"),
+                memos = memos,
+                allLabels = setOf("label 1", "label 2")
+            ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
-            isMemoEditorVisible = false,
             isAddCategoryDialogVisible = false,
-            editingMemo = null,
-            // events
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
@@ -273,23 +224,22 @@ fun MemoScreenPreview_MemoEditorVisible(
 ) {
     SwemoTheme {
         MemoScreen(
-            categories = emptyList(),
-            selectedCategory = Category(id = "1", name = "category 1"),
-            memos = memos,
-            allLabels = setOf("label 1", "label 2", "label 3", "label 4", "label 5", "label 6", "label 7", "label 8", "label 9"),
-            drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
-            isMemoEditorVisible = true,
-            isAddCategoryDialogVisible = false,
-            editingMemo = Memo(
-                categoryId = "0",
-                id = "0",
-                contents = listOf(
-                    MemoContent(label = "label 3", text = "Fake memo 7"),
-                    MemoContent(label = "label 5", text = "Fake memo 7"),
-                    MemoContent(label = "label 7", text = "Fake memo 7"),
+            uiState = MemoUiState(
+                categories = emptyList(),
+                selectedCategory = Category(id = "1", name = "category 1"),
+                memos = memos,
+                allLabels = setOf("label 3", "label 5"),
+                editorState = MemoUiState.EditorState(
+                    isVisible = true,
+                    editingMemo = Memo(
+                        categoryId = "1",
+                        id = "0",
+                        contents = listOf(MemoContent(label = "Label", text = "Editing..."))
+                    )
                 )
             ),
-            // events
+            drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
+            isAddCategoryDialogVisible = false,
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
@@ -306,15 +256,14 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
 ) {
     SwemoTheme {
         MemoScreen(
-            categories = categories,
-            selectedCategory = Category(id = "1", name = "category 1"),
-            memos = emptyList(),
-            allLabels = emptySet(),
+            uiState = MemoUiState(
+                categories = categories,
+                selectedCategory = Category(id = "1", name = "category 1"),
+                memos = emptyList(),
+                allLabels = emptySet()
+            ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
-            isMemoEditorVisible = false,
             isAddCategoryDialogVisible = true,
-            editingMemo = null,
-            // events
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
