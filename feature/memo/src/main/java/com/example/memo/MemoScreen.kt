@@ -19,10 +19,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -49,42 +46,31 @@ fun MemoScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // ui-only states
+    // ui element state
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var isAddCategoryDialogVisible by remember { mutableStateOf(false) }
 
     MemoScreen(
         uiState = uiState,
-        // ui-only states
         drawerState = drawerState,
-        isAddCategoryDialogVisible = isAddCategoryDialogVisible,
         // events
         onCategorySelected = viewModel::selectCategory,
-        onAddMemoClick = viewModel::addMemo,
-        onMemoEditorToggleButtonClick = viewModel::toggleEditor,
-        onAddCategoryDialogVisibleChange = { visible ->
-            isAddCategoryDialogVisible = visible
-        },
+        onAddMemoClick = { viewModel.addMemo() },
+        onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
+        onAddCategoryDialogVisibilityChange = viewModel::changeAddCategoryDialogVisibility,
     )
 }
 
-// 순수 UI (Stateless)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MemoScreen(
     uiState: MemoUiState,
-    // ui-only states
     drawerState: DrawerState,
-    isAddCategoryDialogVisible: Boolean,
-    // events
     onCategorySelected: (Category) -> Unit,
     onAddMemoClick: () -> Unit,
     onMemoEditorToggleButtonClick: () -> Unit,
-    onAddCategoryDialogVisibleChange: (Boolean) -> Unit,
+    onAddCategoryDialogVisibilityChange: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-
-    // selectedCategory에 값이 담길 때 ui 표시
     val currentCategory = uiState.selectedCategory ?: return
 
     ModalNavigationDrawer(
@@ -97,7 +83,7 @@ internal fun MemoScreen(
                     scope.launch { drawerState.close() }
                 },
                 onAddCategoryButtonClick = {
-                    onAddCategoryDialogVisibleChange(true)
+                    onAddCategoryDialogVisibilityChange(true)
                 }
             )
         }
@@ -122,9 +108,7 @@ internal fun MemoScreen(
                     },
                     actions = {
                         IconButton(
-                            onClick = {
-                                onAddMemoClick()
-                            }
+                            onClick = onAddMemoClick
                         ) {
                             Icon(
                                 imageVector = SwemoIcons.Add,
@@ -151,9 +135,7 @@ internal fun MemoScreen(
             },
             floatingActionButton = {
                 Button(
-                    onClick = {
-                        onMemoEditorToggleButtonClick()
-                    }
+                    onClick = onMemoEditorToggleButtonClick
                 ) {
                     Icon(
                         imageVector = SwemoIcons.AddNotes,
@@ -172,10 +154,10 @@ internal fun MemoScreen(
         }
     }
 
-    if (isAddCategoryDialogVisible) {
+    if (uiState.isAddCategoryDialogVisible) {
         AddCategoryDialog(
             onDismissRequest = {
-                onAddCategoryDialogVisibleChange(false)
+                onAddCategoryDialogVisibilityChange(false)
             },
             onConfirmation = {},
             icon = SwemoIcons.Add,
@@ -207,11 +189,10 @@ fun MemoScreenPreview_Default(
                 allLabels = setOf("label 1", "label 2")
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
-            isAddCategoryDialogVisible = false,
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryDialogVisibleChange = {},
+            onAddCategoryDialogVisibilityChange = {},
         )
     }
 }
@@ -232,18 +213,21 @@ fun MemoScreenPreview_MemoEditorVisible(
                 editorState = MemoUiState.EditorState(
                     isVisible = true,
                     editingMemo = Memo(
-                        categoryId = "1",
+                        categoryId = "0",
                         id = "0",
-                        contents = listOf(MemoContent(label = "Label", text = "Editing..."))
-                    )
+                        contents = listOf(
+                            MemoContent(label = "label 3", text = "Fake memo 7"),
+                            MemoContent(label = "label 5", text = "Fake memo 7"),
+                            MemoContent(label = "label 7", text = "Fake memo 7"),
+                        )
+                    ),
                 )
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
-            isAddCategoryDialogVisible = false,
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryDialogVisibleChange = {},
+            onAddCategoryDialogVisibilityChange = {},
         )
     }
 }
@@ -260,14 +244,14 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
                 categories = categories,
                 selectedCategory = Category(id = "1", name = "category 1"),
                 memos = emptyList(),
-                allLabels = emptySet()
+                allLabels = emptySet(),
+                isAddCategoryDialogVisible = true
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
-            isAddCategoryDialogVisible = true,
             onCategorySelected = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryDialogVisibleChange = {},
+            onAddCategoryDialogVisibilityChange = {},
         )
     }
 }

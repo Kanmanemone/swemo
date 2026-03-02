@@ -8,6 +8,7 @@ data class MemoUiState(
     val selectedCategory: Category? = null,
     val memos: List<Memo> = emptyList(),
     val allLabels: Set<String> = emptySet(),
+    val isAddCategoryDialogVisible: Boolean = false,
     val editorState: EditorState = EditorState()
 ) {
     data class EditorState(

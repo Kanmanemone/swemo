@@ -31,8 +31,6 @@ class MemoViewModel @Inject constructor(
 
     private val selectedCategory = MutableStateFlow<Category?>(null)
 
-    private val isEditorVisible = MutableStateFlow(false)
-
     @OptIn(ExperimentalCoroutinesApi::class)
     private val memos: Flow<List<Memo>> = selectedCategory
         .flatMapLatest { category ->
@@ -40,13 +38,18 @@ class MemoViewModel @Inject constructor(
             else repository.getMemosByCategory(category.id)
         }
 
+    private val isEditorVisible = MutableStateFlow(false)
+
+    private val isAddCategoryDialogVisible = MutableStateFlow(false)
+
     // flow들을 combine하여 최종 ui state 선언
     val uiState: StateFlow<MemoUiState> = combine(
         categories,
         selectedCategory,
         memos,
-        isEditorVisible
-    ) { categories, selectedCategory, memos, isEditorVisible ->
+        isEditorVisible,
+        isAddCategoryDialogVisible
+    ) { categories, selectedCategory, memos, isEditorVisible, isAddCategoryDialogVisible ->
         MemoUiState(
             categories = categories,
             selectedCategory = selectedCategory,
@@ -55,6 +58,7 @@ class MemoViewModel @Inject constructor(
                 .flatMap { it.contents }
                 .map { it.label }
                 .toSet(),
+            isAddCategoryDialogVisible = isAddCategoryDialogVisible,
             editorState = MemoUiState.EditorState(
                 isVisible = isEditorVisible,
                 editingMemo = selectedCategory?.let {
@@ -79,8 +83,12 @@ class MemoViewModel @Inject constructor(
         selectedCategory.value = category
     }
 
-    fun toggleEditor() {
+    fun toggleEditorVisibility() {
         isEditorVisible.value = !isEditorVisible.value
+    }
+
+    fun changeAddCategoryDialogVisibility(visible: Boolean) {
+        isAddCategoryDialogVisible.value = visible
     }
 
     fun addMemo() {
