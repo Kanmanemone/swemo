@@ -1,7 +1,12 @@
 package com.example.memo.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.designsystem.theme.SwemoTheme
@@ -13,7 +18,8 @@ import com.example.ui.DevicePreviews
 fun MemoEditor(
     editingMemo: Memo?,
     modifier: Modifier = Modifier,
-    allLabels: Set<String>
+    allLabels: Set<String>,
+    onAddMemoClick: () -> Unit = {},
 ) {
     if (editingMemo != null) {
         val usedLabels: Set<String> = editingMemo.contents
@@ -23,6 +29,7 @@ fun MemoEditor(
 
         Column(
             modifier = modifier
+                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
         ) {
             EditableFieldList(
                 memo = editingMemo,
@@ -32,7 +39,9 @@ fun MemoEditor(
                 labels = availableLabels,
                 modifier = Modifier.fillMaxWidth()
             )
-            MemoEditorActionBar()
+            MemoEditorActionBar(
+                onAddMemoClick = onAddMemoClick
+            )
         }
     }
 }

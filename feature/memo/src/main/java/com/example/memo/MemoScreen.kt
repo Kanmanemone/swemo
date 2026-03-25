@@ -54,7 +54,7 @@ fun MemoScreen(
         drawerState = drawerState,
         // events
         onCategorySelected = viewModel::selectCategory,
-        onAddMemoClick = { viewModel.addMemo() },
+        onAddMemoClick = viewModel::addMemo,
         onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
         onAddCategoryDialogVisibilityChange = viewModel::changeAddCategoryDialogVisibility,
     )
@@ -106,16 +106,6 @@ internal fun MemoScreen(
                             )
                         }
                     },
-                    actions = {
-                        IconButton(
-                            onClick = onAddMemoClick
-                        ) {
-                            Icon(
-                                imageVector = SwemoIcons.Add,
-                                contentDescription = null
-                            )
-                        }
-                    }
                 )
             },
             bottomBar = {
@@ -128,7 +118,8 @@ internal fun MemoScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            allLabels = uiState.allLabels
+                            allLabels = uiState.allLabels,
+                            onAddMemoClick = onAddMemoClick
                         )
                     }
                 }

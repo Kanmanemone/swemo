@@ -13,7 +13,9 @@ import com.example.ui.DevicePreviews
 import com.example.designsystem.icon.SwemoIcons
 
 @Composable
-fun MemoEditorActionBar() {
+fun MemoEditorActionBar(
+    onAddMemoClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -31,9 +33,7 @@ fun MemoEditorActionBar() {
             )
         }
         Button(
-            onClick = {
-
-            },
+            onClick = onAddMemoClick,
             shape = RoundedCornerShape(50),
         ) {
             Icon(
