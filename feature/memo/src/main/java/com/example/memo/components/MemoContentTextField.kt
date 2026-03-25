@@ -11,16 +11,15 @@ import com.example.ui.DevicePreviews
 @Composable
 fun MemoContentTextField(
     label: String,
-    text: String
+    text: String,
+    onTextChange: (String) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         OutlinedTextField(
             value = text,
-            onValueChange = {
-
-            },
+            onValueChange = onTextChange,
             modifier = Modifier.weight(1f),
             placeholder = {
                 Text(text = label)
@@ -34,6 +33,7 @@ fun MemoContentTextField(
 fun MemoContentTextFieldPreview() {
     MemoContentTextField(
         label = "label",
-        text = "text"
+        text = "text",
+        onTextChange = {}
     )
 }

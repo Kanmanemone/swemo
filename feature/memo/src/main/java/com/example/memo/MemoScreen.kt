@@ -54,6 +54,8 @@ fun MemoScreen(
         drawerState = drawerState,
         // events
         onCategorySelected = viewModel::selectCategory,
+        onMemoChange = viewModel::updateEditingMemo,
+        onAddContentClick = viewModel::addMemoContent,
         onAddMemoClick = viewModel::addMemo,
         onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
         onAddCategoryDialogVisibilityChange = viewModel::changeAddCategoryDialogVisibility,
@@ -66,6 +68,8 @@ internal fun MemoScreen(
     uiState: MemoUiState,
     drawerState: DrawerState,
     onCategorySelected: (Category) -> Unit,
+    onMemoChange: (Memo) -> Unit,
+    onAddContentClick: () -> Unit,
     onAddMemoClick: () -> Unit,
     onMemoEditorToggleButtonClick: () -> Unit,
     onAddCategoryDialogVisibilityChange: (Boolean) -> Unit,
@@ -105,7 +109,7 @@ internal fun MemoScreen(
                                 contentDescription = null
                             )
                         }
-                    },
+                    }
                 )
             },
             bottomBar = {
@@ -118,6 +122,8 @@ internal fun MemoScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
+                            onMemoChange = onMemoChange,
+                            onAddContentClick = onAddContentClick,
                             onAddMemoClick = onAddMemoClick
                         )
                     }
@@ -180,6 +186,8 @@ fun MemoScreenPreview_Default(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             onCategorySelected = {},
+            onMemoChange = {},
+            onAddContentClick = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryDialogVisibilityChange = {},
@@ -215,6 +223,8 @@ fun MemoScreenPreview_MemoEditorVisible(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             onCategorySelected = {},
+            onMemoChange = {},
+            onAddContentClick = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryDialogVisibilityChange = {},
@@ -239,6 +249,8 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
             onCategorySelected = {},
+            onMemoChange = {},
+            onAddContentClick = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryDialogVisibilityChange = {},

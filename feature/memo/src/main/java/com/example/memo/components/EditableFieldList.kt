@@ -3,6 +3,7 @@ package com.example.memo.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,20 +17,48 @@ import com.example.ui.DevicePreviews
 fun EditableFieldList(
     memo: Memo,
     modifier: Modifier = Modifier,
+    onMemoChange: (Memo) -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
-            memo.contents.forEach { (label, text) ->
-                item {
-                    Surface(
-                        tonalElevation = 20.dp
-                    ) {
-                        MemoContentTextField(label = label, text = text)
-                    }
+            items(
+                items = memo.contents,
+                key = { content -> content.label }
+            ) { content ->
+                Surface(
+                    tonalElevation = 20.dp
+                ) {
+                    MemoContentTextField(
+                        label = content.label,
+                        text = content.text,
+                        onTextChange = { changedText ->
+                            onMemoChange(
+                                memo.updateContentText(
+                                    label = content.label,
+                                    text = changedText,
+                                )
+                            )
+                        }
+                    )
                 }
+            }
+        }
+    )
+}
+
+private fun Memo.updateContentText(
+    label: String,
+    text: String,
+): Memo {
+    return copy(
+        contents = contents.map { currentContent ->
+            if (currentContent.label == label) {
+                currentContent.copy(text = text)
+            } else {
+                currentContent
             }
         }
     )

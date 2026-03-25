@@ -14,6 +14,7 @@ import com.example.designsystem.icon.SwemoIcons
 
 @Composable
 fun MemoEditorActionBar(
+    onAddContentClick: () -> Unit = {},
     onAddMemoClick: () -> Unit = {}
 ) {
     Row(
@@ -22,9 +23,7 @@ fun MemoEditorActionBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Button(
-            onClick = {
-
-            },
+            onClick = onAddContentClick,
             shape = RoundedCornerShape(50),
         ) {
             Icon(

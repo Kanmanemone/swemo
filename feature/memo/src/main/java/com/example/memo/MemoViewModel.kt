@@ -42,14 +42,26 @@ class MemoViewModel @Inject constructor(
 
     private val isAddCategoryDialogVisible = MutableStateFlow(false)
 
+    private val editingMemo = MutableStateFlow<Memo?>(null)
+
     // flow들을 combine하여 최종 ui state 선언
     val uiState: StateFlow<MemoUiState> = combine(
         categories,
         selectedCategory,
         memos,
         isEditorVisible,
-        isAddCategoryDialogVisible
-    ) { categories, selectedCategory, memos, isEditorVisible, isAddCategoryDialogVisible ->
+        isAddCategoryDialogVisible,
+        editingMemo
+    ) { values: Array<Any?> ->
+        @Suppress("UNCHECKED_CAST")
+        val categories = values[0] as List<Category>
+        val selectedCategory = values[1] as Category?
+        @Suppress("UNCHECKED_CAST")
+        val memos = values[2] as List<Memo>
+        val isEditorVisible = values[3] as Boolean
+        val isAddCategoryDialogVisible = values[4] as Boolean
+        val editingMemo = values[5] as Memo?
+
         MemoUiState(
             categories = categories,
             selectedCategory = selectedCategory,
@@ -61,15 +73,7 @@ class MemoViewModel @Inject constructor(
             isAddCategoryDialogVisible = isAddCategoryDialogVisible,
             editorState = MemoUiState.EditorState(
                 isVisible = isEditorVisible,
-                editingMemo = selectedCategory?.let {
-                    Memo(
-                        categoryId = it.id,
-                        id = "0",
-                        contents = listOf(
-                            MemoContent(label = "Label", text = "Editing..")
-                        )
-                    )
-                }
+                editingMemo = editingMemo
             )
         )
     }.stateIn(
@@ -81,29 +85,37 @@ class MemoViewModel @Inject constructor(
     // events
     fun selectCategory(category: Category) {
         selectedCategory.value = category
+        if (isEditorVisible.value) {
+            editingMemo.value = createEditingMemo(category)
+        }
     }
 
     fun toggleEditorVisibility() {
-        isEditorVisible.value = !isEditorVisible.value
+        val visible = !isEditorVisible.value
+        isEditorVisible.value = visible
+        editingMemo.value = selectedCategory.value?.takeIf { visible }?.let(::createEditingMemo)
     }
 
     fun changeAddCategoryDialogVisibility(visible: Boolean) {
         isAddCategoryDialogVisible.value = visible
     }
 
+    fun addMemoContent() {
+        val currentEditingMemo = editingMemo.value ?: return
+        editingMemo.value = currentEditingMemo.copy(
+            contents = currentEditingMemo.contents + MemoContent(label = "label ${currentEditingMemo.contents.size + 1}", text = "")
+        )
+    }
+
+    fun updateEditingMemo(memo: Memo) {
+        editingMemo.value = memo
+    }
+
     fun addMemo() {
-        val currentCategory = selectedCategory.value ?: return
+        val currentEditingMemo = editingMemo.value ?: return
         viewModelScope.launch {
-            repository.insertMemo(
-                Memo(
-                    categoryId = currentCategory.id,
-                    id = "0",
-                    contents = listOf(
-                        MemoContent(label = "New1", text = "Added via ViewModel"),
-                        MemoContent(label = "New2", text = "Added via ViewModel")
-                    )
-                )
-            )
+            repository.insertMemo(currentEditingMemo)
+            editingMemo.value = selectedCategory.value?.let(::createEditingMemo)
         }
     }
 
@@ -123,3 +135,11 @@ class MemoViewModel @Inject constructor(
 }
 
 private val SharingPolicy = SharingStarted.WhileSubscribed(5_000)
+
+private fun createEditingMemo(category: Category): Memo = Memo(
+    categoryId = category.id,
+    id = "0",
+    contents = listOf(
+        MemoContent(label = "label ${0 + 1}", text = "")
+    )
+)
