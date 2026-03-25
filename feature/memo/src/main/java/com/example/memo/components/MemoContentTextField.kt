@@ -1,14 +1,12 @@
 package com.example.memo.components
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.ui.DevicePreviews
-import com.example.designsystem.icon.SwemoIcons
 
 @Composable
 fun MemoContentTextField(
@@ -18,24 +16,16 @@ fun MemoContentTextField(
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        BasicTextField(
-            value = "$label: $text",
+        OutlinedTextField(
+            value = text,
             onValueChange = {
 
             },
-            modifier = Modifier.weight(1f)
-        )
-
-        IconButton(
-            onClick = {
-
+            modifier = Modifier.weight(1f),
+            placeholder = {
+                Text(text = label)
             }
-        ) {
-            Icon(
-                imageVector = SwemoIcons.Remove,
-                contentDescription = null
-            )
-        }
+        )
     }
 }
 

@@ -118,7 +118,6 @@ internal fun MemoScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            allLabels = uiState.allLabels,
                             onAddMemoClick = onAddMemoClick
                         )
                     }

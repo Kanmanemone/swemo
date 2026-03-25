@@ -17,11 +17,12 @@ fun MemoFeed(
     modifier: Modifier
 ) {
     LazyColumn(
-        modifier = modifier
+        modifier = modifier,
+        reverseLayout = true,
     ) {
-        items(memos) { memo ->
-            MemoCard(memo = memo)
+        items(memos.asReversed()) { memo ->
             Spacer(modifier = Modifier.height(4.dp))
+            MemoCard(memo = memo)
         }
     }
 }

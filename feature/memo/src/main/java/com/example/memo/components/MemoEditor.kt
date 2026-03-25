@@ -18,25 +18,15 @@ import com.example.ui.DevicePreviews
 fun MemoEditor(
     editingMemo: Memo?,
     modifier: Modifier = Modifier,
-    allLabels: Set<String>,
     onAddMemoClick: () -> Unit = {},
 ) {
     if (editingMemo != null) {
-        val usedLabels: Set<String> = editingMemo.contents
-            .map { it.label }
-            .toSet()
-        val availableLabels: Set<String> = allLabels - usedLabels
-
         Column(
             modifier = modifier
                 .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
         ) {
             EditableFieldList(
                 memo = editingMemo,
-                modifier = Modifier.fillMaxWidth()
-            )
-            LabelChipGroup(
-                labels = availableLabels,
                 modifier = Modifier.fillMaxWidth()
             )
             MemoEditorActionBar(
@@ -60,7 +50,6 @@ fun MemoEditorPreview() {
                     MemoContent(label = "label 3", text = "Fake memo 7"),
                 )
             ),
-            allLabels = setOf("label 1", "label 2", "label 3", "label 4", "label 5", "label 6", "label 7", "label 8", "label 9"),
         )
     }
 }
