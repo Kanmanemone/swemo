@@ -180,7 +180,7 @@ fun MemoScreenPreview_Default(
         MemoScreen(
             uiState = MemoUiState(
                 categories = emptyList(),
-                selectedCategory = Category(id = "1", name = "category 1"),
+                selectedCategory = Category(id = 1L, name = "category 1"),
                 memos = memos,
                 allLabels = setOf("label 1", "label 2")
             ),
@@ -205,18 +205,18 @@ fun MemoScreenPreview_MemoEditorVisible(
         MemoScreen(
             uiState = MemoUiState(
                 categories = emptyList(),
-                selectedCategory = Category(id = "1", name = "category 1"),
+                selectedCategory = Category(id = 1L, name = "category 1"),
                 memos = memos,
                 allLabels = setOf("label 3", "label 5"),
                 editorState = MemoUiState.EditorState(
                     isVisible = true,
                     editingMemo = Memo(
-                        categoryId = "0",
-                        id = "0",
+                        categoryId = 0L,
+                        id = 0L,
                         contents = listOf(
-                            MemoContent(label = "label 3", text = "Fake memo 7"),
-                            MemoContent(label = "label 5", text = "Fake memo 7"),
-                            MemoContent(label = "label 7", text = "Fake memo 7"),
+                            MemoContent(id = 0L, label = "label 3", text = "Fake memo 7"),
+                            MemoContent(id = -1L, label = "label 5", text = "Fake memo 7"),
+                            MemoContent(id = -2L, label = "label 7", text = "Fake memo 7"),
                         )
                     ),
                 )
@@ -242,7 +242,7 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
         MemoScreen(
             uiState = MemoUiState(
                 categories = categories,
-                selectedCategory = Category(id = "1", name = "category 1"),
+                selectedCategory = Category(id = 1L, name = "category 1"),
                 memos = emptyList(),
                 allLabels = emptySet(),
                 isAddCategoryDialogVisible = true

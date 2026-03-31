@@ -1,3 +1,3 @@
 package com.example.model
 
-data class Memo(val categoryId: String, val id: String, val contents: List<MemoContent> = emptyList())
+data class Memo(val categoryId: Long, val id: Long, val contents: List<MemoContent> = emptyList())

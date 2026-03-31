@@ -1,3 +1,3 @@
 package com.example.model
 
-data class Category(val id: String, val name: String)
+data class Category(val id: Long, val name: String)

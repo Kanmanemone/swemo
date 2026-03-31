@@ -103,7 +103,11 @@ class MemoViewModel @Inject constructor(
     fun addMemoContent() {
         val currentEditingMemo = editingMemo.value ?: return
         editingMemo.value = currentEditingMemo.copy(
-            contents = currentEditingMemo.contents + MemoContent(label = "label ${currentEditingMemo.contents.size + 1}", text = "")
+            contents = currentEditingMemo.contents + MemoContent(
+                id = nextTemporaryId(currentEditingMemo),
+                label = "label ${currentEditingMemo.contents.size + 1}",
+                text = ""
+            )
         )
     }
 
@@ -138,8 +142,13 @@ private val SharingPolicy = SharingStarted.WhileSubscribed(5_000)
 
 private fun createEditingMemo(category: Category): Memo = Memo(
     categoryId = category.id,
-    id = "0",
+    id = 0L,
     contents = listOf(
-        MemoContent(label = "label ${0 + 1}", text = "")
+        MemoContent(id = 0L, label = "label ${0 + 1}", text = "")
     )
 )
+
+private fun nextTemporaryId(memo: Memo): Long {
+    val minId = memo.contents.minOfOrNull(MemoContent::id) ?: 0L
+    return if (minId <= 0L) minId - 1L else -1L
+}

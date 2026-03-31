@@ -26,7 +26,7 @@ fun EditableFieldList(
         content = {
             items(
                 items = memo.contents,
-                key = { content -> content.label }
+                key = MemoContent::id
             ) { content ->
                 Surface(
                     tonalElevation = 20.dp
@@ -70,12 +70,12 @@ fun EditableFieldListPreview() {
     SwemoTheme {
         EditableFieldList(
             Memo(
-                categoryId = "0",
-                id = "0",
+                categoryId = 0L,
+                id = 0L,
                 contents = listOf(
-                    MemoContent(label = "label 1", text = "Fake memo 7"),
-                    MemoContent(label = "label 2", text = "Fake memo 7"),
-                    MemoContent(label = "label 3", text = "Fake memo 7"),
+                    MemoContent(id = 1L, label = "label 1", text = "Fake memo 7"),
+                    MemoContent(id = 2L, label = "label 2", text = "Fake memo 7"),
+                    MemoContent(id = 3L, label = "label 3", text = "Fake memo 7"),
                 )
             )
         )
