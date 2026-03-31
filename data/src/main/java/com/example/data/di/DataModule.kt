@@ -1,10 +1,9 @@
 package com.example.data.di
 
-import com.example.data.FakeMemoRepository
 import com.example.data.MemoRepository
+import com.example.data.MemoRepositoryImpl
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -16,14 +15,6 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindMemoRepository(
-        fakeMemoRepository: FakeMemoRepository
+        memoRepositoryImpl: MemoRepositoryImpl
     ): MemoRepository
-
-    companion object {
-        @Provides
-        @Singleton
-        fun provideFakeMemoRepository(): FakeMemoRepository {
-            return FakeMemoRepository()
-        }
-    }
 }

@@ -44,5 +44,7 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
 
+    // Module
+    implementation(projects.database)
     implementation(projects.model)
 }

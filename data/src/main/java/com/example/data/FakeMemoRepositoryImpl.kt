@@ -7,8 +7,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class FakeMemoRepository : MemoRepository {
+class FakeMemoRepositoryImpl @Inject constructor() : MemoRepository {
     private val categoriesFlow: MutableStateFlow<List<Category>> = MutableStateFlow(
         listOf(
             Category(id = 1L, name = "category 1"),
@@ -58,7 +59,7 @@ class FakeMemoRepository : MemoRepository {
         }
     }
 
-    override fun insertMemo(memo: Memo) {
+    override suspend fun insertMemo(memo: Memo) {
         memosFlow.update { current ->
             current + memo
         }
