@@ -3,8 +3,6 @@ package com.example.data
 import com.example.database.dao.CategoryDao
 import com.example.database.dao.MemoDao
 import com.example.database.model.CategoryEntity
-import com.example.database.model.MemoContentEntity
-import com.example.database.model.MemoEntity
 import com.example.database.model.PopulatedMemo
 import com.example.database.model.asExternalModel
 import com.example.model.Category
@@ -26,7 +24,7 @@ class MemoRepositoryImpl @Inject constructor(
     override fun getCategory(): Flow<List<Category>> = flow {
         seedDefaultCategoriesIfEmpty()
         emitAll(
-            categoryDao.getCategoryEntities().map { categories ->
+            categoryDao.getCategories().map { categories ->
                 categories.map(CategoryEntity::asExternalModel)
             }
         )
@@ -38,30 +36,39 @@ class MemoRepositoryImpl @Inject constructor(
         }
 
     override fun getMemosByCategory(categoryId: Long): Flow<List<Memo>> =
-        memoDao.getPopulatedMemosByCategory(categoryId).map { memos ->
+        memoDao.getPopulatedMemosByCategoryId(categoryId).map { memos ->
             memos.map(PopulatedMemo::asExternalModel)
         }
 
-    override suspend fun insertMemo(memo: Memo) {
-        memoDao.insertMemoWithContents(
-            memo = MemoEntity(
-                id = memo.id.takeIf { it > 0L } ?: 0L,
-                categoryId = memo.categoryId
-            ),
-            contents = memo.contents.mapIndexed { index, content ->
-                MemoContentEntity(
-                    id = content.id.takeIf { it > 0L } ?: 0L,
-                    memoId = memo.id,
-                    position = index,
-                    label = content.label,
-                    text = content.text
-                )
-            }
-        )
+    override suspend fun insertCategory(name: String): Long {
+        val trimmedName = name.trim()
+        return categoryDao.insertCategory(CategoryEntity(name = trimmedName))
+    }
+
+    override suspend fun insertMemo(memo: Memo): Long = memoDao.insertPopulatedMemo(memo)
+
+    override suspend fun updateCategoryName(categoryId: Long, name: String) {
+        categoryDao.updateCategoryName(categoryId, name)
+    }
+
+    override suspend fun updateMemo(memo: Memo) {
+        memoDao.updatePopulatedMemo(memo)
+    }
+
+    override suspend fun deleteCategory(categoryId: Long) {
+        categoryDao.deleteCategory(categoryId)
+    }
+
+    override suspend fun deleteMemo(memoId: Long) {
+        memoDao.deletePopulatedMemo(memoId)
+    }
+
+    override suspend fun deleteMemoContent(memoContentId: Long) {
+        memoDao.deleteMemoContent(memoContentId)
     }
 
     private suspend fun seedDefaultCategoriesIfEmpty() {
-        if (categoryDao.getCategoryEntities().first().isNotEmpty()) return
+        if (categoryDao.getCategories().first().isNotEmpty()) return
 
         DefaultCategories.forEach { category ->
             categoryDao.insertCategory(category)

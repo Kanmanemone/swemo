@@ -59,9 +59,66 @@ class FakeMemoRepositoryImpl @Inject constructor() : MemoRepository {
         }
     }
 
-    override suspend fun insertMemo(memo: Memo) {
+    override suspend fun insertCategory(name: String): Long {
+        val trimmedName = name.trim()
+        val nextId = (categoriesFlow.value.maxOfOrNull(Category::id) ?: 0L) + 1L
+        val newCategory = Category(id = nextId, name = trimmedName)
+        categoriesFlow.update { current ->
+            current + newCategory
+        }
+        return nextId
+    }
+
+    override suspend fun insertMemo(memo: Memo): Long {
+        val nextMemoId = (memosFlow.value.maxOfOrNull(Memo::id) ?: 0L) + 1L
+        val insertedMemo = memo.copy(
+            id = nextMemoId
+        )
         memosFlow.update { current ->
-            current + memo
+            current + insertedMemo
+        }
+        return nextMemoId
+    }
+
+    override suspend fun updateCategoryName(categoryId: Long, name: String) {
+        categoriesFlow.update { categories ->
+            categories.map { category ->
+                if (category.id == categoryId) {
+                    category.copy(name = name)
+                } else {
+                    category
+                }
+            }
+        }
+    }
+
+    override suspend fun updateMemo(memo: Memo) {
+        memosFlow.update { current ->
+            current.map { existingMemo ->
+                if (existingMemo.id == memo.id) memo else existingMemo
+            }
+        }
+    }
+
+    override suspend fun deleteCategory(categoryId: Long) {
+        categoriesFlow.update { categories ->
+            categories.filterNot { category -> category.id == categoryId }
+        }
+    }
+
+    override suspend fun deleteMemo(memoId: Long) {
+        memosFlow.update { memos ->
+            memos.filterNot { memo -> memo.id == memoId }
+        }
+    }
+
+    override suspend fun deleteMemoContent(memoContentId: Long) {
+        memosFlow.update { memos ->
+            memos.map { memo ->
+                memo.copy(
+                    contents = memo.contents.filterNot { content -> content.id == memoContentId }
+                )
+            }
         }
     }
 }
