@@ -37,10 +37,12 @@ interface MemoDao {
     }
 
     @Transaction
-    suspend fun deletePopulatedMemo(memoId: Long) {
+    suspend fun deletePopulatedMemo(memoId: Long): Long? {
         deleteMemoContentsByMemoId(memoId)
-        deleteMemo(memoId)
+        val targetMemoExists = deleteMemo(memoId) > 0
+        return if (targetMemoExists) memoId else null
     }
+
 
     // 기본 CRUD (Basic CRUD)
     @Insert
@@ -53,7 +55,7 @@ interface MemoDao {
     suspend fun updateMemo(memo: MemoEntity)
 
     @Query("DELETE FROM memos WHERE id = :memoId")
-    suspend fun deleteMemo(memoId: Long)
+    suspend fun deleteMemo(memoId: Long): Int
 
     @Query("DELETE FROM memo_contents WHERE id = :memoContentId")
     suspend fun deleteMemoContent(memoContentId: Long)

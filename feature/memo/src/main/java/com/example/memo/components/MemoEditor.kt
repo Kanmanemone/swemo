@@ -12,17 +12,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
+import com.example.memo.EditorMode
 import com.example.model.Memo
 import com.example.model.MemoContent
 import com.example.ui.DevicePreviews
 
 @Composable
 fun MemoEditor(
-    editingMemo: Memo?,
     modifier: Modifier = Modifier,
+    editingMemo: Memo?,
+    mode: EditorMode,
+    isClearAllEnabled: Boolean = false,
     onMemoChange: (Memo) -> Unit = {},
     onAddContentClick: () -> Unit = {},
-    onAddMemoClick: () -> Unit = {}
+    onClearAllClick: () -> Unit = {},
+    onAddMemoClick: () -> Unit = {},
+    onEditMemoClick: () -> Unit = {}
 ) {
     if (editingMemo != null) {
         Column(
@@ -37,8 +42,12 @@ fun MemoEditor(
                 onMemoChange = onMemoChange
             )
             MemoEditorActionBar(
+                mode = mode,
+                isClearAllEnabled = isClearAllEnabled,
                 onAddContentClick = onAddContentClick,
-                onAddMemoClick = onAddMemoClick
+                onClearAllClick = onClearAllClick,
+                onAddMemoClick = onAddMemoClick,
+                onEditMemoClick = onEditMemoClick
             )
         }
     }
@@ -49,7 +58,7 @@ fun MemoEditor(
 fun MemoEditorPreview() {
     SwemoTheme {
         MemoEditor(
-            Memo(
+            editingMemo = Memo(
                 categoryId = 0L,
                 id = 0L,
                 contents = listOf(
@@ -58,6 +67,7 @@ fun MemoEditorPreview() {
                     MemoContent(id = 3L, label = "label 3", text = "Fake memo 7"),
                 )
             ),
+            mode = EditorMode.Insert,
             onMemoChange = {},
         )
     }

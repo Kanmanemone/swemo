@@ -38,7 +38,9 @@ class MemoRepositoryImpl @Inject constructor(
         return categoryDao.insertCategory(CategoryEntity(name = trimmedName))
     }
 
-    override suspend fun insertMemo(memo: Memo): Long = memoDao.insertPopulatedMemo(memo)
+    override suspend fun insertMemo(memo: Memo): Long {
+        return memoDao.insertPopulatedMemo(memo)
+    }
 
     override suspend fun updateCategoryName(categoryId: Long, name: String) {
         categoryDao.updateCategoryName(categoryId, name)
@@ -48,12 +50,12 @@ class MemoRepositoryImpl @Inject constructor(
         memoDao.updatePopulatedMemo(memo)
     }
 
-    override suspend fun deleteCategory(categoryId: Long) {
-        categoryDao.deleteCategory(categoryId)
+    override suspend fun deleteCategory(categoryId: Long): Long? {
+        return categoryDao.deleteCategory(categoryId)
     }
 
-    override suspend fun deleteMemo(memoId: Long) {
-        memoDao.deletePopulatedMemo(memoId)
+    override suspend fun deleteMemo(memoId: Long): Long? {
+        return memoDao.deletePopulatedMemo(memoId)
     }
 
     override suspend fun deleteMemoContent(memoContentId: Long) {

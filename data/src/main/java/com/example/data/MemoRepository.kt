@@ -14,7 +14,7 @@ interface MemoRepository {
 
     suspend fun updateCategoryName(categoryId: Long, name: String)
     suspend fun updateMemo(memo: Memo)
-    suspend fun deleteCategory(categoryId: Long)
-    suspend fun deleteMemo(memoId: Long)
+    suspend fun deleteCategory(categoryId: Long): Long?
+    suspend fun deleteMemo(memoId: Long): Long?
     suspend fun deleteMemoContent(memoContentId: Long)
 }

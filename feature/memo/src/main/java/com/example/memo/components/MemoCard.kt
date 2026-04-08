@@ -17,6 +17,7 @@ import com.example.model.Memo
 fun MemoCard(
     memo: Memo,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
 ) {
     val contentTexts = memo.contents.joinToString(separator = "\n") { memoContent -> "${memoContent.label}: ${memoContent.text}" }
@@ -25,7 +26,7 @@ fun MemoCard(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = {},
+                onClick = onClick,
                 onLongClick = onLongClick
             )
     ) {

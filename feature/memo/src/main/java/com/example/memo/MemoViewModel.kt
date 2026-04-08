@@ -85,7 +85,9 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
             editorState =
                 MemoUiState.EditorState(
                     isVisible = isEditorVisible,
-                    editingMemo = editingMemo
+                    editingMemo = editingMemo,
+                    mode = editingMemo.asEditorMode(),
+                    isClearAllEnabled = (editingMemo != null) && (editingMemo != defaultEditingMemo())
                 )
         )
     }.stateIn(
@@ -124,10 +126,13 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
     }
 
     fun deleteSelectedCategory() {
-        val category = selectedCategory.value ?: return
-
         viewModelScope.launch {
-            repository.deleteCategory(category.id)
+            val id = selectedCategoryId.value ?: return@launch
+            val deletedCategoryId = repository.deleteCategory(id)
+            // 만약 MemoEditor에서 편집 중인 메모가 삭제한 카테고리에 속했다면, 해당 편집을 취소
+            if (deletedCategoryId == editingMemo.value?.categoryId) {
+                resetEditingMemo()
+            }
         }
     }
 
@@ -146,20 +151,45 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         editingMemo.value = memo
     }
 
+    fun copyMemoToEditor(memo: Memo) {
+        editingMemo.value = memo
+        isEditorVisible.value = true
+    }
+
     fun addMemo() {
         val currentEditingMemo = editingMemo.value ?: return
         val currentSelectedCategoryId = selectedCategory.value?.id ?: return
 
         viewModelScope.launch {
             repository.insertMemo(currentEditingMemo.copy(categoryId = currentSelectedCategoryId))
-            editingMemo.value = defaultEditingMemo()
+            resetEditingMemo()
         }
+    }
+
+    fun updateMemo() {
+        val currentEditingMemo = editingMemo.value ?: return
+        viewModelScope.launch {
+            repository.updateMemo(currentEditingMemo)
+            resetEditingMemo()
+        }
+    }
+
+    fun clearEditingMemo() {
+        resetEditingMemo()
     }
 
     fun deleteMemo(memoId: Long) {
         viewModelScope.launch {
-            repository.deleteMemo(memoId)
+            val deletedMemoId = repository.deleteMemo(memoId)
+            // 삭제한 메모가 만약 MemoEditor에서 편집 중인 메모였다면, 해당 편집을 취소
+            if (deletedMemoId == editingMemo.value?.id) {
+                resetEditingMemo()
+            }
         }
+    }
+
+    private fun resetEditingMemo() {
+        editingMemo.value = defaultEditingMemo()
     }
 }
 
@@ -191,3 +221,7 @@ private fun nextTemporaryId(memo: Memo): Long {
     val minId = memo.contents.minOfOrNull(MemoContent::id) ?: 0L
     return minOf(minId, 0L) - 1L
 }
+
+// Memo.id가 1 이상이면 Database에 있는 Memo라는 의미이므로 Update 모드
+private fun Memo?.asEditorMode(): EditorMode =
+    if (this != null && id > 0L) EditorMode.Update else EditorMode.Insert

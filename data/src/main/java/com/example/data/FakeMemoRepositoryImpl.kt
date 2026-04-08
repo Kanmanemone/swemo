@@ -103,16 +103,30 @@ class FakeMemoRepositoryImpl @Inject constructor() : MemoRepository {
         }
     }
 
-    override suspend fun deleteCategory(categoryId: Long) {
+    override suspend fun deleteCategory(categoryId: Long): Long? {
+        val targetCategoryExists = categoriesFlow.value.any { category ->
+            category.id == categoryId
+        }
+
+        // Category.id == categoryId인 Category 제거
         categoriesFlow.update { categories ->
             categories.filterNot { category -> category.id == categoryId }
         }
+
+        return if (targetCategoryExists) categoryId else null
     }
 
-    override suspend fun deleteMemo(memoId: Long) {
+    override suspend fun deleteMemo(memoId: Long): Long? {
+        val targetMemoExists = memosFlow.value.any { memo ->
+            memo.id == memoId
+        }
+
+        // Memo.id == memoId인 Memo 제거
         memosFlow.update { memos ->
             memos.filterNot { memo -> memo.id == memoId }
         }
+
+        return if (targetMemoExists) memoId else null
     }
 
     override suspend fun deleteMemoContent(memoContentId: Long) {

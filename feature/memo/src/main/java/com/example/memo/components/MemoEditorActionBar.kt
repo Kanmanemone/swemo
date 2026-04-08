@@ -9,17 +9,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.ui.DevicePreviews
 import com.example.designsystem.icon.SwemoIcons
+import com.example.memo.EditorMode
+import com.example.ui.DevicePreviews
 
 @Composable
 fun MemoEditorActionBar(
+    mode: EditorMode = EditorMode.Insert,
+    isClearAllEnabled: Boolean = false,
     onAddContentClick: () -> Unit = {},
-    onAddMemoClick: () -> Unit = {}
+    onClearAllClick: () -> Unit = {},
+    onAddMemoClick: () -> Unit = {},
+    onEditMemoClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Button(
@@ -31,12 +36,30 @@ fun MemoEditorActionBar(
                 contentDescription = null
             )
         }
+
         Button(
-            onClick = onAddMemoClick,
+            onClick = onClearAllClick,
+            enabled = isClearAllEnabled,
             shape = RoundedCornerShape(50),
         ) {
             Icon(
-                imageVector = SwemoIcons.Send,
+                imageVector = SwemoIcons.ClearAll,
+                contentDescription = null
+            )
+        }
+
+        Button(
+            onClick = when (mode) {
+                EditorMode.Insert -> onAddMemoClick
+                EditorMode.Update -> onEditMemoClick
+            },
+            shape = RoundedCornerShape(50),
+        ) {
+            Icon(
+                imageVector = when (mode) {
+                    EditorMode.Insert -> SwemoIcons.Send
+                    EditorMode.Update -> SwemoIcons.Edit
+                },
                 contentDescription = null
             )
         }

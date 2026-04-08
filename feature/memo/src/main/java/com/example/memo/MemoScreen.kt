@@ -68,9 +68,12 @@ fun MemoScreen(
         // events
         onDialogChange = { dialogState = it },
         onCategorySelected = viewModel::selectCategory,
+        onMemoClick = viewModel::copyMemoToEditor,
         onMemoChange = viewModel::updateEditingMemo,
         onAddContentClick = viewModel::addMemoContent,
+        onClearAllClick = viewModel::clearEditingMemo,
         onAddMemoClick = viewModel::addMemo,
+        onEditMemoClick = viewModel::updateMemo,
         onDeleteMemoClick = viewModel::deleteMemo,
         onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
         onAddCategoryClick = viewModel::addCategory,
@@ -88,9 +91,12 @@ private fun MemoScreen(
     // events
     onDialogChange: (MemoScreenDialog?) -> Unit,
     onCategorySelected: (Long) -> Unit,
+    onMemoClick: (Memo) -> Unit,
     onMemoChange: (Memo) -> Unit,
     onAddContentClick: () -> Unit,
+    onClearAllClick: () -> Unit,
     onAddMemoClick: () -> Unit,
+    onEditMemoClick: () -> Unit,
     onDeleteMemoClick: (Long) -> Unit,
     onMemoEditorToggleButtonClick: () -> Unit,
     onAddCategoryClick: (String) -> Unit,
@@ -168,13 +174,17 @@ private fun MemoScreen(
                             tonalElevation = 4.dp
                         ) {
                             MemoEditor(
-                                editingMemo = uiState.editorState.editingMemo,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(12.dp),
+                                editingMemo = uiState.editorState.editingMemo,
+                                mode = uiState.editorState.mode,
+                                isClearAllEnabled = uiState.editorState.isClearAllEnabled,
                                 onMemoChange = onMemoChange,
                                 onAddContentClick = onAddContentClick,
-                                onAddMemoClick = onAddMemoClick
+                                onClearAllClick = onClearAllClick,
+                                onAddMemoClick = onAddMemoClick,
+                                onEditMemoClick = onEditMemoClick
                             )
                         }
                     }
@@ -196,6 +206,7 @@ private fun MemoScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
+                    onMemoClick = onMemoClick,
                     onMemoLongClick = { memoId ->
                         onDialogChange(MemoScreenDialog.MemoDelete(memoId))
                     }
@@ -353,9 +364,12 @@ fun MemoScreenPreview_Default(
             dialogState = null,
             onDialogChange = {},
             onCategorySelected = {},
+            onMemoClick = {},
             onMemoChange = {},
             onAddContentClick = {},
+            onClearAllClick = {},
             onAddMemoClick = {},
+            onEditMemoClick = {},
             onDeleteMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryClick = {},
@@ -395,9 +409,12 @@ fun MemoScreenPreview_MemoEditorVisible(
             dialogState = null,
             onDialogChange = {},
             onCategorySelected = {},
+            onMemoClick = {},
             onMemoChange = {},
             onAddContentClick = {},
+            onClearAllClick = {},
             onAddMemoClick = {},
+            onEditMemoClick = {},
             onDeleteMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryClick = {},
@@ -425,9 +442,12 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             dialogState = MemoScreenDialog.CategoryAdd,
             onDialogChange = {},
             onCategorySelected = {},
+            onMemoClick = {},
             onMemoChange = {},
             onAddContentClick = {},
+            onClearAllClick = {},
             onAddMemoClick = {},
+            onEditMemoClick = {},
             onDeleteMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryClick = {},
