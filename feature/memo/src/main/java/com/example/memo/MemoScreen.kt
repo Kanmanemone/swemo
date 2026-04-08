@@ -38,6 +38,7 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.components.AddCategoryDialog
 import com.example.memo.components.CategorySelector
 import com.example.memo.components.DeleteCategoryDialog
+import com.example.memo.components.DeleteMemoDialog
 import com.example.memo.components.MemoEditor
 import com.example.memo.components.MemoFeed
 import com.example.memo.components.RenameCategoryDialog
@@ -48,6 +49,7 @@ import com.example.ui.CategoryPreviewParameterProvider
 import com.example.ui.DevicePreviews
 import com.example.ui.MemoPreviewParameterProvider
 import kotlinx.coroutines.launch
+import java.io.Serializable
 
 @Composable
 fun MemoScreen(
@@ -69,6 +71,7 @@ fun MemoScreen(
         onMemoChange = viewModel::updateEditingMemo,
         onAddContentClick = viewModel::addMemoContent,
         onAddMemoClick = viewModel::addMemo,
+        onDeleteMemoClick = viewModel::deleteMemo,
         onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
         onAddCategoryClick = viewModel::addCategory,
         onRenameCategoryClick = viewModel::renameSelectedCategory,
@@ -78,7 +81,7 @@ fun MemoScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MemoScreen(
+private fun MemoScreen(
     uiState: MemoUiState,
     drawerState: DrawerState,
     dialogState: MemoScreenDialog?,
@@ -88,6 +91,7 @@ internal fun MemoScreen(
     onMemoChange: (Memo) -> Unit,
     onAddContentClick: () -> Unit,
     onAddMemoClick: () -> Unit,
+    onDeleteMemoClick: (Long) -> Unit,
     onMemoEditorToggleButtonClick: () -> Unit,
     onAddCategoryClick: (String) -> Unit,
     onRenameCategoryClick: (String) -> Unit,
@@ -105,7 +109,7 @@ internal fun MemoScreen(
                     scope.launch { drawerState.close() }
                 },
                 onAddCategoryButtonClick = {
-                    onDialogChange(MemoScreenDialog.CATEGORY_ADD)
+                    onDialogChange(MemoScreenDialog.CategoryAdd)
                 }
             )
         }
@@ -120,7 +124,7 @@ internal fun MemoScreen(
                 ) {
                     Button(
                         onClick = {
-                            onDialogChange(MemoScreenDialog.CATEGORY_ADD)
+                            onDialogChange(MemoScreenDialog.CategoryAdd)
                         }
                     ) {
                         Text("새 카테고리 만들기")
@@ -149,10 +153,10 @@ internal fun MemoScreen(
                         actions = {
                             MemoScreenCategoryMenu(
                                 onRenameClick = {
-                                    onDialogChange(MemoScreenDialog.CATEGORY_RENAME)
+                                    onDialogChange(MemoScreenDialog.CategoryRename)
                                 },
                                 onDeleteClick = {
-                                    onDialogChange(MemoScreenDialog.CATEGORY_DELETE)
+                                    onDialogChange(MemoScreenDialog.CategoryDelete)
                                 }
                             )
                         }
@@ -191,7 +195,10 @@ internal fun MemoScreen(
                     memos = uiState.memos,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(paddingValues),
+                    onMemoLongClick = { memoId ->
+                        onDialogChange(MemoScreenDialog.MemoDelete(memoId))
+                    }
                 )
             }
         }
@@ -211,6 +218,10 @@ internal fun MemoScreen(
         },
         onDeleteCategory = {
             onDeleteCategoryClick()
+            onDialogChange(null)
+        },
+        onDeleteMemo = { memoId ->
+            onDeleteMemoClick(memoId)
             onDialogChange(null)
         }
     )
@@ -271,15 +282,16 @@ private fun MemoScreenDialogHost(
     onAddCategory: (String) -> Unit,
     onRenameCategory: (String) -> Unit,
     onDeleteCategory: () -> Unit,
+    onDeleteMemo: (Long) -> Unit,
 ) {
     when (dialog) {
-        MemoScreenDialog.CATEGORY_ADD ->
+        MemoScreenDialog.CategoryAdd ->
             AddCategoryDialog(
                 onDismissRequest = onDismiss,
                 onConfirmation = onAddCategory,
             )
 
-        MemoScreenDialog.CATEGORY_RENAME ->
+        MemoScreenDialog.CategoryRename ->
             if (targetCategory != null) {
                 RenameCategoryDialog(
                     currentCategoryName = targetCategory.name,
@@ -288,7 +300,7 @@ private fun MemoScreenDialogHost(
                 )
             }
 
-        MemoScreenDialog.CATEGORY_DELETE ->
+        MemoScreenDialog.CategoryDelete ->
             if (targetCategory != null) {
                 DeleteCategoryDialog(
                     categoryName = targetCategory.name,
@@ -297,14 +309,30 @@ private fun MemoScreenDialogHost(
                 )
             }
 
+        is MemoScreenDialog.MemoDelete ->
+            DeleteMemoDialog(
+                onDismissRequest = onDismiss,
+                onConfirmation = { onDeleteMemo(dialog.memoId) }
+            )
+
         null -> Unit
     }
 }
 
-internal enum class MemoScreenDialog {
-    CATEGORY_ADD,
-    CATEGORY_RENAME,
-    CATEGORY_DELETE
+private sealed interface MemoScreenDialog : Serializable {
+    data object CategoryAdd : MemoScreenDialog {
+        private fun readResolve(): Any = CategoryAdd
+    }
+
+    data object CategoryRename : MemoScreenDialog {
+        private fun readResolve(): Any = CategoryRename
+    }
+
+    data object CategoryDelete : MemoScreenDialog {
+        private fun readResolve(): Any = CategoryDelete
+    }
+
+    data class MemoDelete(val memoId: Long) : MemoScreenDialog
 }
 
 @DevicePreviews
@@ -328,6 +356,7 @@ fun MemoScreenPreview_Default(
             onMemoChange = {},
             onAddContentClick = {},
             onAddMemoClick = {},
+            onDeleteMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryClick = {},
             onRenameCategoryClick = {},
@@ -369,6 +398,7 @@ fun MemoScreenPreview_MemoEditorVisible(
             onMemoChange = {},
             onAddContentClick = {},
             onAddMemoClick = {},
+            onDeleteMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryClick = {},
             onRenameCategoryClick = {},
@@ -392,12 +422,13 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
                 allLabels = emptySet(),
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
-            dialogState = MemoScreenDialog.CATEGORY_ADD,
+            dialogState = MemoScreenDialog.CategoryAdd,
             onDialogChange = {},
             onCategorySelected = {},
             onMemoChange = {},
             onAddContentClick = {},
             onAddMemoClick = {},
+            onDeleteMemoClick = {},
             onMemoEditorToggleButtonClick = {},
             onAddCategoryClick = {},
             onRenameCategoryClick = {},

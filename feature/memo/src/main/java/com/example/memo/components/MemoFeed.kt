@@ -14,15 +14,22 @@ import com.example.model.Memo
 @Composable
 fun MemoFeed(
     memos: List<Memo>,
-    modifier: Modifier
+    modifier: Modifier = Modifier,
+    onMemoLongClick: (Long) -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier,
         reverseLayout = true,
     ) {
-        items(memos.asReversed()) { memo ->
+        items(
+            items = memos.asReversed(),
+            key = Memo::id
+        ) { memo ->
             Spacer(modifier = Modifier.height(4.dp))
-            MemoCard(memo = memo)
+            MemoCard(
+                memo = memo,
+                onLongClick = { onMemoLongClick(memo.id) }
+            )
         }
     }
 }

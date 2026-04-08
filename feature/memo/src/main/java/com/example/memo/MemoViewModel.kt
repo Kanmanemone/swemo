@@ -155,6 +155,12 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
             editingMemo.value = defaultEditingMemo()
         }
     }
+
+    fun deleteMemo(memoId: Long) {
+        viewModelScope.launch {
+            repository.deleteMemo(memoId)
+        }
+    }
 }
 
 private val SharingPolicy = SharingStarted.WhileSubscribed(5_000)
