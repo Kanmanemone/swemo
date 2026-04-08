@@ -64,8 +64,6 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     private val isEditorVisible = MutableStateFlow(false)
 
-    private val isAddCategoryDialogVisible = MutableStateFlow(false)
-
     private val editingMemo = MutableStateFlow<Memo?>(defaultEditingMemo())
 
     val uiState: StateFlow<MemoUiState> = combine(
@@ -73,18 +71,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         selectedCategory,
         memos,
         isEditorVisible,
-        isAddCategoryDialogVisible,
         editingMemo
-    ) { values: Array<Any?> ->
-        @Suppress("UNCHECKED_CAST")
-        val categories = values[0] as List<Category>
-        val selectedCategory = values[1] as Category?
-        @Suppress("UNCHECKED_CAST")
-        val memos = values[2] as List<Memo>
-        val isEditorVisible = values[3] as Boolean
-        val isAddCategoryDialogVisible = values[4] as Boolean
-        val editingMemo = values[5] as Memo?
-
+    ) { categories, selectedCategory, memos, isEditorVisible, editingMemo ->
         MemoUiState(
             categories = categories,
             selectedCategory = selectedCategory,
@@ -94,7 +82,6 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
                     .flatMap { it.contents }
                     .map { it.label }
                     .toSet(),
-            isAddCategoryDialogVisible = isAddCategoryDialogVisible,
             editorState =
                 MemoUiState.EditorState(
                     isVisible = isEditorVisible,
@@ -128,10 +115,6 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     fun updateEditingMemo(memo: Memo) {
         editingMemo.value = memo
-    }
-
-    fun changeAddCategoryDialogVisibility(visible: Boolean) {
-        isAddCategoryDialogVisible.value = visible
     }
 
     fun addMemo() {

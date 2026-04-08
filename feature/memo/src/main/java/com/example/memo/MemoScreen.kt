@@ -19,7 +19,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -48,17 +51,19 @@ fun MemoScreen(
 
     // ui element state
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    var dialogState by rememberSaveable { mutableStateOf<MemoScreenDialog?>(null) }
 
     MemoScreen(
         uiState = uiState,
         drawerState = drawerState,
+        dialogState = dialogState,
         // events
+        onDialogChange = { dialogState = it },
         onCategorySelected = viewModel::selectCategory,
         onMemoChange = viewModel::updateEditingMemo,
         onAddContentClick = viewModel::addMemoContent,
         onAddMemoClick = viewModel::addMemo,
         onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
-        onAddCategoryDialogVisibilityChange = viewModel::changeAddCategoryDialogVisibility,
     )
 }
 
@@ -67,12 +72,14 @@ fun MemoScreen(
 internal fun MemoScreen(
     uiState: MemoUiState,
     drawerState: DrawerState,
+    dialogState: MemoScreenDialog?,
+    // events
+    onDialogChange: (MemoScreenDialog?) -> Unit,
     onCategorySelected: (Long) -> Unit,
     onMemoChange: (Memo) -> Unit,
     onAddContentClick: () -> Unit,
     onAddMemoClick: () -> Unit,
     onMemoEditorToggleButtonClick: () -> Unit,
-    onAddCategoryDialogVisibilityChange: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val currentCategory = uiState.selectedCategory ?: return
@@ -87,7 +94,7 @@ internal fun MemoScreen(
                     scope.launch { drawerState.close() }
                 },
                 onAddCategoryButtonClick = {
-                    onAddCategoryDialogVisibilityChange(true)
+                    onDialogChange(MemoScreenDialog.CATEGORY_ADD)
                 }
             )
         }
@@ -150,24 +157,53 @@ internal fun MemoScreen(
         }
     }
 
-    if (uiState.isAddCategoryDialogVisible) {
-        AddCategoryDialog(
-            onDismissRequest = {
-                onAddCategoryDialogVisibilityChange(false)
-            },
-            onConfirmation = {},
-            icon = SwemoIcons.Add,
-            dialogTitle = "Add Category",
-        ) {
-            TextField(
-                value = "",
-                onValueChange = {},
-                placeholder = {
-                    Text("Category name")
-                }
-            )
+    MemoScreenDialogHost(
+        dialog = dialogState,
+        onDismiss = { onDialogChange(null) },
+        onConfirmation = {},
+    )
+}
+
+@Composable
+private fun MemoScreenDialogHost(
+    dialog: MemoScreenDialog?,
+    onDismiss: () -> Unit,
+    onConfirmation: () -> Unit,
+) {
+    when (dialog) {
+        MemoScreenDialog.CATEGORY_ADD -> {
+            AddCategoryDialog(
+                onDismissRequest = onDismiss,
+                onConfirmation = onConfirmation,
+                icon = SwemoIcons.Add,
+                dialogTitle = "Add Category",
+            ) {
+                TextField(
+                    value = "",
+                    onValueChange = {},
+                    placeholder = {
+                        Text("Category name")
+                    }
+                )
+            }
         }
+
+        MemoScreenDialog.CATEGORY_RENAME -> {
+            // TODO: (구현 예정) (임시 이름) RenameCategoryDialog()
+        }
+
+        MemoScreenDialog.CATEGORY_DELETE -> {
+            // TODO: (구현 예정) (임시 이름) DeleteCategoryDialog()
+        }
+
+        null -> Unit
     }
+}
+
+internal enum class MemoScreenDialog {
+    CATEGORY_ADD,
+    CATEGORY_RENAME, // 구현 예정
+    CATEGORY_DELETE // 구현 예정
 }
 
 @DevicePreviews
@@ -185,12 +221,13 @@ fun MemoScreenPreview_Default(
                 allLabels = setOf("label 1", "label 2")
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
+            dialogState = null,
+            onDialogChange = {},
             onCategorySelected = {},
             onMemoChange = {},
             onAddContentClick = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryDialogVisibilityChange = {},
         )
     }
 }
@@ -222,12 +259,13 @@ fun MemoScreenPreview_MemoEditorVisible(
                 )
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
+            dialogState = null,
+            onDialogChange = {},
             onCategorySelected = {},
             onMemoChange = {},
             onAddContentClick = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryDialogVisibilityChange = {},
         )
     }
 }
@@ -245,15 +283,15 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
                 selectedCategory = Category(id = 1L, name = "category 1"),
                 memos = emptyList(),
                 allLabels = emptySet(),
-                isAddCategoryDialogVisible = true
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
+            dialogState = MemoScreenDialog.CATEGORY_ADD,
+            onDialogChange = {},
             onCategorySelected = {},
             onMemoChange = {},
             onAddContentClick = {},
             onAddMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryDialogVisibilityChange = {},
         )
     }
 }
