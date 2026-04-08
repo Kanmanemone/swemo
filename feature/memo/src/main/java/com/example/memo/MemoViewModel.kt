@@ -8,43 +8,66 @@ import com.example.model.Memo
 import com.example.model.MemoContent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MemoViewModel @Inject constructor(
-    private val repository: MemoRepository
-) : ViewModel() {
+class MemoViewModel @Inject constructor(private val repository: MemoRepository) : ViewModel() {
 
-    // combine할 flow들
-    private val categories: Flow<List<Category>> = repository.getCategory()
+    private val categories: StateFlow<List<Category>> =
+        repository
+            .getCategory()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingPolicy,
+                initialValue = emptyList()
+            )
 
-    private val selectedCategory = MutableStateFlow<Category?>(null)
+    private val selectedCategoryId = MutableStateFlow<Long?>(null)
+
+    private val selectedCategory: StateFlow<Category?> = combine(
+        categories,
+        selectedCategoryId,
+        ::determineCategory
+    ).stateIn(
+        scope = viewModelScope,
+        started = SharingPolicy,
+        initialValue = null
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val memos: Flow<List<Memo>> = selectedCategory
-        .flatMapLatest { category ->
-            if (category == null) flowOf(emptyList())
-            else repository.getMemosByCategory(category.id)
-        }
+    private val memos: StateFlow<List<Memo>> =
+        selectedCategory
+            .map { category -> category?.id }
+            .distinctUntilChanged()
+            .flatMapLatest { categoryId ->
+                if (categoryId == null) {
+                    flowOf(emptyList())
+                } else {
+                    repository.getMemosByCategory(categoryId)
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingPolicy,
+                initialValue = emptyList()
+            )
 
     private val isEditorVisible = MutableStateFlow(false)
 
     private val isAddCategoryDialogVisible = MutableStateFlow(false)
 
-    private val editingMemo = MutableStateFlow<Memo?>(null)
+    private val editingMemo = MutableStateFlow<Memo?>(defaultEditingMemo())
 
-    // flow들을 combine하여 최종 ui state 선언
     val uiState: StateFlow<MemoUiState> = combine(
         categories,
         selectedCategory,
@@ -66,15 +89,17 @@ class MemoViewModel @Inject constructor(
             categories = categories,
             selectedCategory = selectedCategory,
             memos = memos,
-            allLabels = memos.asSequence()
-                .flatMap { it.contents }
-                .map { it.label }
-                .toSet(),
+            allLabels =
+                memos.asSequence()
+                    .flatMap { it.contents }
+                    .map { it.label }
+                    .toSet(),
             isAddCategoryDialogVisible = isAddCategoryDialogVisible,
-            editorState = MemoUiState.EditorState(
-                isVisible = isEditorVisible,
-                editingMemo = editingMemo
-            )
+            editorState =
+                MemoUiState.EditorState(
+                    isVisible = isEditorVisible,
+                    editingMemo = editingMemo
+                )
         )
     }.stateIn(
         scope = viewModelScope,
@@ -82,22 +107,12 @@ class MemoViewModel @Inject constructor(
         initialValue = MemoUiState()
     )
 
-    // events
-    fun selectCategory(category: Category) {
-        selectedCategory.value = category
-        if (isEditorVisible.value) {
-            editingMemo.value = createEditingMemo(category)
-        }
+    fun selectCategory(categoryId: Long) {
+        selectedCategoryId.value = categoryId
     }
 
     fun toggleEditorVisibility() {
-        val visible = !isEditorVisible.value
-        isEditorVisible.value = visible
-        editingMemo.value = selectedCategory.value?.takeIf { visible }?.let(::createEditingMemo)
-    }
-
-    fun changeAddCategoryDialogVisibility(visible: Boolean) {
-        isAddCategoryDialogVisible.value = visible
+        isEditorVisible.value = !isEditorVisible.value
     }
 
     fun addMemoContent() {
@@ -115,40 +130,46 @@ class MemoViewModel @Inject constructor(
         editingMemo.value = memo
     }
 
-    fun addMemo() {
-        val currentEditingMemo = editingMemo.value ?: return
-        viewModelScope.launch {
-            repository.insertMemo(currentEditingMemo)
-            editingMemo.value = selectedCategory.value?.let(::createEditingMemo)
-        }
+    fun changeAddCategoryDialogVisibility(visible: Boolean) {
+        isAddCategoryDialogVisible.value = visible
     }
 
-    init {
-        // 첫 번째 카테고리를 자동으로 선택
+    fun addMemo() {
+        val currentEditingMemo = editingMemo.value ?: return
+        val currentSelectedCategoryId = selectedCategory.value?.id ?: return
+
         viewModelScope.launch {
-            categories
-                .filter { it.isNotEmpty() }
-                .first()
-                .let { list ->
-                    if (selectedCategory.value == null) {
-                        selectedCategory.value = list.first()
-                    }
-                }
+            repository.insertMemo(currentEditingMemo.copy(categoryId = currentSelectedCategoryId))
+            editingMemo.value = defaultEditingMemo()
         }
     }
 }
 
 private val SharingPolicy = SharingStarted.WhileSubscribed(5_000)
 
-private fun createEditingMemo(category: Category): Memo = Memo(
-    categoryId = category.id,
-    id = 0L,
-    contents = listOf(
-        MemoContent(id = 0L, label = "label ${0 + 1}", text = "")
+private fun determineCategory(
+    categories: List<Category>,
+    selectedCategoryId: Long?,
+): Category? =
+    when {
+        // 카테고리 리스트에 항목이 없음 → null
+        categories.isEmpty() -> null
+        // 선택된 카테고리가, null값임 → 첫 번째 카테고리 자동 선택
+        selectedCategoryId == null -> categories.first()
+        // 선택된 카테고리가, 리스트에 있음 → 그대로 유지
+        else -> categories.firstOrNull { it.id == selectedCategoryId }
+        // 선택된 카테고리가, (카테고리 삭제 등의 이유로) 리스트에 없음 → 첫 번째 카테고리 자동 선택
+            ?: categories.first()
+    }
+
+private fun defaultEditingMemo(): Memo =
+    Memo(
+        categoryId = 0L,
+        id = 0L,
+        contents = listOf(MemoContent(id = 0L, label = "label 1", text = ""))
     )
-)
 
 private fun nextTemporaryId(memo: Memo): Long {
     val minId = memo.contents.minOfOrNull(MemoContent::id) ?: 0L
-    return if (minId <= 0L) minId - 1L else -1L
+    return minOf(minId, 0L) - 1L
 }

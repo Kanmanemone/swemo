@@ -67,7 +67,7 @@ fun MemoScreen(
 internal fun MemoScreen(
     uiState: MemoUiState,
     drawerState: DrawerState,
-    onCategorySelected: (Category) -> Unit,
+    onCategorySelected: (Long) -> Unit,
     onMemoChange: (Memo) -> Unit,
     onAddContentClick: () -> Unit,
     onAddMemoClick: () -> Unit,
@@ -82,8 +82,8 @@ internal fun MemoScreen(
         drawerContent = {
             CategorySelector(
                 categories = uiState.categories,
-                onCategorySelected = { category ->
-                    onCategorySelected(category)
+                onCategorySelected = { categoryId ->
+                    onCategorySelected(categoryId)
                     scope.launch { drawerState.close() }
                 },
                 onAddCategoryButtonClick = {

@@ -21,7 +21,7 @@ import com.example.designsystem.icon.SwemoIcons
 @Composable
 fun CategorySelector(
     categories: List<Category>,
-    onCategorySelected: (Category) -> Unit,
+    onCategorySelected: (Long) -> Unit,
     onAddCategoryButtonClick: () -> Unit,
 ) {
     Column(
@@ -38,7 +38,7 @@ fun CategorySelector(
         categories.forEach { category ->
             TextButton(
                 onClick = {
-                    onCategorySelected(category)
+                    onCategorySelected(category.id)
                 }
             ) {
                 Text(text = category.name)

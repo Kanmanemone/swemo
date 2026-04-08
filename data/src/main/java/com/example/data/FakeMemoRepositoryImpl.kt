@@ -70,6 +70,9 @@ class FakeMemoRepositoryImpl @Inject constructor() : MemoRepository {
     }
 
     override suspend fun insertMemo(memo: Memo): Long {
+        require(categoriesFlow.value.any { category -> category.id == memo.categoryId }) {
+            "Category ${memo.categoryId} does not exist."
+        }
         val nextMemoId = (memosFlow.value.maxOfOrNull(Memo::id) ?: 0L) + 1L
         val insertedMemo = memo.copy(
             id = nextMemoId
