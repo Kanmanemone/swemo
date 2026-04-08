@@ -20,4 +20,13 @@ object SwemoIcons {
 
     val Send: ImageVector
         @Composable get() = ImageVector.vectorResource(id = R.drawable.send_24dp_5f6368_fill0_wght400_grad0_opsz24)
+
+    val SideNavigation: ImageVector
+        @Composable get() = ImageVector.vectorResource(id = R.drawable.side_navigation_24dp_5f6368_fill0_wght400_grad0_opsz24)
+
+    val Edit: ImageVector
+        @Composable get() = ImageVector.vectorResource(id = R.drawable.edit_24dp_5f6368_fill0_wght400_grad0_opsz24)
+
+    val Delete: ImageVector
+        @Composable get() = ImageVector.vectorResource(id = R.drawable.delete_24dp_5f6368_fill0_wght400_grad0_opsz24)
 }

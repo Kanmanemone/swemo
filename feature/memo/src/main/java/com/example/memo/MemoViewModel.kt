@@ -102,6 +102,35 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         isEditorVisible.value = !isEditorVisible.value
     }
 
+    fun addCategory(name: String) {
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank()) return
+
+        viewModelScope.launch {
+            selectedCategoryId.value = repository.insertCategory(trimmedName)
+        }
+    }
+
+    fun renameSelectedCategory(name: String) {
+        val category = selectedCategory.value ?: return
+        val trimmedName = name.trim()
+
+        if (trimmedName.isBlank()) return
+        if (trimmedName == category.name) return
+
+        viewModelScope.launch {
+            repository.updateCategoryName(category.id, trimmedName)
+        }
+    }
+
+    fun deleteSelectedCategory() {
+        val category = selectedCategory.value ?: return
+
+        viewModelScope.launch {
+            repository.deleteCategory(category.id)
+        }
+    }
+
     fun addMemoContent() {
         val currentEditingMemo = editingMemo.value ?: return
         editingMemo.value = currentEditingMemo.copy(

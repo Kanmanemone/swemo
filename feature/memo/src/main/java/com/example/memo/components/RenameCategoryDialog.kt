@@ -15,51 +15,51 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.ui.DevicePreviews
 
 @Composable
-fun AddCategoryDialog(
+fun RenameCategoryDialog(
+    currentCategoryName: String,
     onDismissRequest: () -> Unit,
     onConfirmation: (String) -> Unit,
 ) {
-    var newCategoryName by rememberSaveable { mutableStateOf("") }
-    val isConfirmEnabled = newCategoryName.trim().isNotBlank()
+    var updatedCategoryName by rememberSaveable(currentCategoryName) {
+        mutableStateOf(currentCategoryName)
+    }
+    val trimmedCategoryName = updatedCategoryName.trim()
+    val isConfirmEnabled = trimmedCategoryName.isNotBlank() && trimmedCategoryName != currentCategoryName
 
     AlertDialog(
-        onDismissRequest = {
-            onDismissRequest()
-        },
+        onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(
                 onClick = {
-                    onConfirmation(newCategoryName)
+                    onConfirmation(updatedCategoryName)
                 },
                 enabled = isConfirmEnabled
             ) {
-                Text(text = "확인")
+                Text(text = "변경")
             }
         },
         dismissButton = {
             TextButton(
-                onClick = {
-                    onDismissRequest()
-                }
+                onClick = onDismissRequest
             ) {
                 Text(text = "취소")
             }
         },
         icon = {
             Icon(
-                imageVector = SwemoIcons.Add,
+                imageVector = SwemoIcons.Edit,
                 contentDescription = null
             )
         },
         title = {
-            Text(text = "카테고리 추가")
+            Text(text = "카테고리 이름 변경")
         },
         text = {
             TextField(
-                value = newCategoryName,
-                onValueChange = { newCategoryName = it },
+                value = updatedCategoryName,
+                onValueChange = { updatedCategoryName = it },
                 placeholder = {
-                    Text("카테고리 이름")
+                    Text("새 카테고리 이름")
                 }
             )
         },
@@ -68,9 +68,10 @@ fun AddCategoryDialog(
 
 @DevicePreviews
 @Composable
-fun AddDialogPreview() {
+fun RenameDialogPreview() {
     SwemoTheme {
-        AddCategoryDialog(
+        RenameCategoryDialog(
+            currentCategoryName = "Example 카테고리",
             onDismissRequest = {},
             onConfirmation = {},
         )

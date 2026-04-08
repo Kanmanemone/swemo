@@ -10,9 +10,6 @@ import com.example.model.Memo
 import dagger.Reusable
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 @Reusable
@@ -21,14 +18,10 @@ class MemoRepositoryImpl @Inject constructor(
     private val memoDao: MemoDao
 ) : MemoRepository {
 
-    override fun getCategory(): Flow<List<Category>> = flow {
-        seedDefaultCategoriesIfEmpty()
-        emitAll(
-            categoryDao.getCategories().map { categories ->
-                categories.map(CategoryEntity::asExternalModel)
-            }
-        )
-    }
+    override fun getCategory(): Flow<List<Category>> =
+        categoryDao.getCategories().map { categories ->
+            categories.map(CategoryEntity::asExternalModel)
+        }
 
     override fun getMemos(): Flow<List<Memo>> =
         memoDao.getPopulatedMemos().map { memos ->
@@ -66,18 +59,4 @@ class MemoRepositoryImpl @Inject constructor(
     override suspend fun deleteMemoContent(memoContentId: Long) {
         memoDao.deleteMemoContent(memoContentId)
     }
-
-    private suspend fun seedDefaultCategoriesIfEmpty() {
-        if (categoryDao.getCategories().first().isNotEmpty()) return
-
-        DefaultCategories.forEach { category ->
-            categoryDao.insertCategory(category)
-        }
-    }
 }
-
-private val DefaultCategories = listOf(
-    CategoryEntity(id = 1L, name = "category 1"),
-    CategoryEntity(id = 2L, name = "category 2"),
-    CategoryEntity(id = 3L, name = "category 3")
-)
