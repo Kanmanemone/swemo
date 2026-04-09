@@ -23,7 +23,9 @@ fun MemoEditor(
     editingMemo: Memo?,
     mode: EditorMode,
     isClearAllEnabled: Boolean = false,
-    onMemoChange: (Memo) -> Unit = {},
+    isSubmitEnabled: Boolean = false,
+    onMemoContentTextChange: (Long, String) -> Unit = { _, _ -> },
+    onMemoContentRemove: (Long) -> Unit = {},
     onAddContentClick: () -> Unit = {},
     onClearAllClick: () -> Unit = {},
     onAddMemoClick: () -> Unit = {},
@@ -39,11 +41,13 @@ fun MemoEditor(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 240.dp),
-                onMemoChange = onMemoChange
+                onMemoContentTextChange = onMemoContentTextChange,
+                onMemoContentRemove = onMemoContentRemove
             )
             MemoEditorActionBar(
                 mode = mode,
                 isClearAllEnabled = isClearAllEnabled,
+                isSubmitEnabled = isSubmitEnabled,
                 onAddContentClick = onAddContentClick,
                 onClearAllClick = onClearAllClick,
                 onAddMemoClick = onAddMemoClick,
@@ -68,7 +72,10 @@ fun MemoEditorPreview() {
                 )
             ),
             mode = EditorMode.Insert,
-            onMemoChange = {},
+            isClearAllEnabled = true,
+            isSubmitEnabled = true,
+            onMemoContentTextChange = { _, _ -> },
+            onMemoContentRemove = {},
         )
     }
 }

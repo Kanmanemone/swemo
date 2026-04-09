@@ -87,7 +87,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
                     isVisible = isEditorVisible,
                     editingMemo = editingMemo,
                     mode = editingMemo.asEditorMode(),
-                    isClearAllEnabled = (editingMemo != null) && (editingMemo != defaultEditingMemo())
+                    isClearAllEnabled = (editingMemo != null) && (editingMemo != defaultEditingMemo()),
+                    isSubmitEnabled = editingMemo.hasContents()
                 )
         )
     }.stateIn(
@@ -141,14 +142,32 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         editingMemo.value = currentEditingMemo.copy(
             contents = currentEditingMemo.contents + MemoContent(
                 id = nextTemporaryId(currentEditingMemo),
-                label = "label ${currentEditingMemo.contents.size + 1}",
+                label = nextMemoContentLabel(currentEditingMemo.contents),
                 text = ""
             )
         )
     }
 
-    fun updateEditingMemo(memo: Memo) {
-        editingMemo.value = memo
+    fun updateMemoContentText(contentId: Long, text: String) {
+        val currentEditingMemo = editingMemo.value ?: return
+        editingMemo.value = currentEditingMemo.copy(
+            contents = currentEditingMemo.contents.map { content ->
+                if (content.id == contentId) {
+                    content.copy(text = text)
+                } else {
+                    content
+                }
+            }
+        )
+    }
+
+    fun removeMemoContent(contentId: Long) {
+        val currentEditingMemo = editingMemo.value ?: return
+        editingMemo.value = currentEditingMemo.copy(
+            contents = currentEditingMemo.contents.filterNot { content ->
+                content.id == contentId
+            }
+        )
     }
 
     fun copyMemoToEditor(memo: Memo) {
@@ -159,6 +178,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
     fun addMemo() {
         val currentEditingMemo = editingMemo.value ?: return
         val currentSelectedCategoryId = selectedCategory.value?.id ?: return
+        if (currentEditingMemo.contents.isEmpty()) return
 
         viewModelScope.launch {
             repository.insertMemo(currentEditingMemo.copy(categoryId = currentSelectedCategoryId))
@@ -168,6 +188,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     fun updateMemo() {
         val currentEditingMemo = editingMemo.value ?: return
+        if (currentEditingMemo.contents.isEmpty()) return
+
         viewModelScope.launch {
             repository.updateMemo(currentEditingMemo)
             resetEditingMemo()
@@ -221,6 +243,20 @@ private fun nextTemporaryId(memo: Memo): Long {
     val minId = memo.contents.minOfOrNull(MemoContent::id) ?: 0L
     return minOf(minId, 0L) - 1L
 }
+
+//  마지막 라벨이 label n이면 label n+1, 내용이 없거나 마지막 라벨이 그 형식이 아니면 label 1
+private fun nextMemoContentLabel(contents: List<MemoContent>): String {
+    val lastLabelNumber = contents
+        .lastOrNull()
+        ?.label
+        ?.removePrefix("label ")
+        ?.toIntOrNull()
+
+    return "label ${if (lastLabelNumber != null) lastLabelNumber + 1 else 1}"
+}
+
+private fun Memo?.hasContents(): Boolean =
+    this?.contents?.isNotEmpty() == true
 
 // Memo.id가 1 이상이면 Database에 있는 Memo라는 의미이므로 Update 모드
 private fun Memo?.asEditorMode(): EditorMode =

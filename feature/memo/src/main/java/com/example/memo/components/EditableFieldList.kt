@@ -17,7 +17,8 @@ import com.example.ui.DevicePreviews
 fun EditableFieldList(
     memo: Memo,
     modifier: Modifier = Modifier,
-    onMemoChange: (Memo) -> Unit = {},
+    onMemoContentTextChange: (Long, String) -> Unit = { _, _ -> },
+    onMemoContentRemove: (Long) -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier,
@@ -35,30 +36,13 @@ fun EditableFieldList(
                         label = content.label,
                         text = content.text,
                         onTextChange = { changedText ->
-                            onMemoChange(
-                                memo.updateContentText(
-                                    label = content.label,
-                                    text = changedText,
-                                )
-                            )
+                            onMemoContentTextChange(content.id, changedText)
+                        },
+                        onRemoveClick = {
+                            onMemoContentRemove(content.id)
                         }
                     )
                 }
-            }
-        }
-    )
-}
-
-private fun Memo.updateContentText(
-    label: String,
-    text: String,
-): Memo {
-    return copy(
-        contents = contents.map { currentContent ->
-            if (currentContent.label == label) {
-                currentContent.copy(text = text)
-            } else {
-                currentContent
             }
         }
     )

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.designsystem.icon.SwemoIcons
+import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.EditorMode
 import com.example.ui.DevicePreviews
 
@@ -17,6 +18,7 @@ import com.example.ui.DevicePreviews
 fun MemoEditorActionBar(
     mode: EditorMode = EditorMode.Insert,
     isClearAllEnabled: Boolean = false,
+    isSubmitEnabled: Boolean = false,
     onAddContentClick: () -> Unit = {},
     onClearAllClick: () -> Unit = {},
     onAddMemoClick: () -> Unit = {},
@@ -53,6 +55,7 @@ fun MemoEditorActionBar(
                 EditorMode.Insert -> onAddMemoClick
                 EditorMode.Update -> onEditMemoClick
             },
+            enabled = isSubmitEnabled,
             shape = RoundedCornerShape(50),
         ) {
             Icon(
