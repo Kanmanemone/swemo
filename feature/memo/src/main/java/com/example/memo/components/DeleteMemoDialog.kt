@@ -15,7 +15,7 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.ui.DevicePreviews
 
 @Composable
-fun DeleteMemoDialog(
+internal fun DeleteMemoDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
 ) {

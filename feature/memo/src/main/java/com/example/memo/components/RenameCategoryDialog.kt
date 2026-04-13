@@ -15,7 +15,7 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.ui.DevicePreviews
 
 @Composable
-fun RenameCategoryDialog(
+internal fun RenameCategoryDialog(
     currentCategoryName: String,
     onDismissRequest: () -> Unit,
     onConfirmation: (String) -> Unit,

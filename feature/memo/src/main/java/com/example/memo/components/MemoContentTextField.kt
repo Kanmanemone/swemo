@@ -13,7 +13,7 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.ui.DevicePreviews
 
 @Composable
-fun MemoContentTextField(
+internal fun MemoContentTextField(
     label: String,
     text: String,
     onTextChange: (String) -> Unit,
@@ -44,9 +44,11 @@ fun MemoContentTextField(
 @DevicePreviews
 @Composable
 fun MemoContentTextFieldPreview() {
-    MemoContentTextField(
-        label = "label",
-        text = "text",
-        onTextChange = {}
-    )
+    SwemoTheme {
+        MemoContentTextField(
+            label = "label",
+            text = "text",
+            onTextChange = {}
+        )
+    }
 }

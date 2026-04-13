@@ -14,7 +14,7 @@ import com.example.model.MemoContent
 import com.example.ui.DevicePreviews
 
 @Composable
-fun EditableFieldList(
+internal fun EditableFieldList(
     memo: Memo,
     modifier: Modifier = Modifier,
     onMemoContentTextChange: (Long, String) -> Unit = { _, _ -> },

@@ -29,7 +29,7 @@ import com.example.ui.DevicePreviews
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategorySelector(
+internal fun CategorySelector(
     categories: List<Category>,
     onCategorySelected: (Long) -> Unit,
     onAddCategoryButtonClick: () -> Unit,

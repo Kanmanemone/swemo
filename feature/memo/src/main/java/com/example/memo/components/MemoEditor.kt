@@ -18,7 +18,7 @@ import com.example.model.MemoContent
 import com.example.ui.DevicePreviews
 
 @Composable
-fun MemoEditor(
+internal fun MemoEditor(
     modifier: Modifier = Modifier,
     editingMemo: Memo?,
     mode: EditorMode,

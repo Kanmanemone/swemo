@@ -15,7 +15,7 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.ui.DevicePreviews
 
 @Composable
-fun AddCategoryDialog(
+internal fun AddCategoryDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: (String) -> Unit,
 ) {

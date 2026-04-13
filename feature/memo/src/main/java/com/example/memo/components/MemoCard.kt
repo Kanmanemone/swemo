@@ -10,11 +10,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.designsystem.theme.SwemoTheme
 import com.example.model.Memo
+import com.example.model.MemoContent
+import com.example.ui.DevicePreviews
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MemoCard(
+internal fun MemoCard(
     memo: Memo,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
@@ -37,5 +40,23 @@ fun MemoCard(
                 text = contentTexts,
             )
         }
+    }
+}
+
+@DevicePreviews
+@Composable
+fun MemoCardPreview() {
+    SwemoTheme {
+        MemoCard(
+            memo = Memo(
+                categoryId = 0L,
+                id = 0L,
+                contents = listOf(
+                    MemoContent(id = 1L, label = "label 1", text = "Fake memo 7"),
+                    MemoContent(id = 2L, label = "label 2", text = "Fake memo 7"),
+                    MemoContent(id = 3L, label = "label 3", text = "Fake memo 7"),
+                )
+            )
+        )
     }
 }

@@ -1,16 +1,21 @@
 package com.example.memo.components
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import com.example.designsystem.theme.SwemoTheme
 import com.example.model.Memo
+import com.example.ui.DevicePreviews
+import com.example.ui.MemoPreviewParameterProvider
 
 @Composable
-fun MemoFeed(
+internal fun MemoFeed(
     memos: List<Memo>,
     modifier: Modifier = Modifier,
     onMemoClick: (Memo) -> Unit = {},
@@ -19,6 +24,7 @@ fun MemoFeed(
     LazyColumn(
         modifier = modifier,
         reverseLayout = true,
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
         items(
             items = memos.asReversed(),
@@ -31,5 +37,18 @@ fun MemoFeed(
                 onLongClick = { onMemoLongClick(memo.id) }
             )
         }
+    }
+}
+
+@DevicePreviews
+@Composable
+fun MemoFeedPreview(
+    @PreviewParameter(MemoPreviewParameterProvider::class)
+    memos: List<Memo>,
+) {
+    SwemoTheme {
+        MemoFeed(
+            memos = memos
+        )
     }
 }

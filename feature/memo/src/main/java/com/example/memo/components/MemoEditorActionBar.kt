@@ -15,7 +15,7 @@ import com.example.memo.EditorMode
 import com.example.ui.DevicePreviews
 
 @Composable
-fun MemoEditorActionBar(
+internal fun MemoEditorActionBar(
     mode: EditorMode = EditorMode.Insert,
     isClearAllEnabled: Boolean = false,
     isSubmitEnabled: Boolean = false,
@@ -72,5 +72,7 @@ fun MemoEditorActionBar(
 @DevicePreviews
 @Composable
 fun MemoEditorActionBarPreview() {
-    MemoEditorActionBar()
+    SwemoTheme {
+        MemoEditorActionBar()
+    }
 }

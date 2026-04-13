@@ -15,7 +15,7 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.ui.DevicePreviews
 
 @Composable
-fun DeleteCategoryDialog(
+internal fun DeleteCategoryDialog(
     categoryName: String,
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
