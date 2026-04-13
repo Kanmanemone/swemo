@@ -18,17 +18,20 @@ class MemoRepositoryImpl @Inject constructor(
     private val memoDao: MemoDao
 ) : MemoRepository {
 
-    override fun getCategory(): Flow<List<Category>> =
+    override fun getCategories(): Flow<List<Category>> =
         categoryDao.getCategories().map { categories ->
             categories.map(CategoryEntity::asExternalModel)
         }
+
+    override suspend fun getCategory(categoryId: Long): Category? =
+        categoryDao.getCategory(categoryId)?.asExternalModel()
 
     override fun getMemos(): Flow<List<Memo>> =
         memoDao.getPopulatedMemos().map { memos ->
             memos.map(PopulatedMemo::asExternalModel)
         }
 
-    override fun getMemosByCategory(categoryId: Long): Flow<List<Memo>> =
+    override fun getMemos(categoryId: Long): Flow<List<Memo>> =
         memoDao.getPopulatedMemosByCategoryId(categoryId).map { memos ->
             memos.map(PopulatedMemo::asExternalModel)
         }

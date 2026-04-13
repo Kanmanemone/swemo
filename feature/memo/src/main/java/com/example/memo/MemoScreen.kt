@@ -62,67 +62,75 @@ fun MemoScreen(
     var dialogState by rememberSaveable { mutableStateOf<MemoScreenDialog?>(null) }
 
     MemoScreen(
+        // states
         uiState = uiState,
         drawerState = drawerState,
         dialogState = dialogState,
-        // events
-        onDialogChange = { dialogState = it },
+        // events - crud
+        /* Category - C */ onAddCategoryClick = viewModel::addCategory,
+        /* Category - U */ onRenameCategoryClick = viewModel::renameCategory,
+        /* Category - D */ onDeleteCategoryClick = viewModel::deleteCategory,
+        /* Memo - C */ onAddMemoClick = viewModel::addMemo,
+        /* Memo - U */ onEditMemoClick = viewModel::updateMemo,
+        /* Memo - D */ onDeleteMemoClick = viewModel::deleteMemo,
+        /* MemoContent - C */ onAddContentClick = viewModel::addMemoContent,
+        /* MemoContent - U */ onMemoContentTextChange = viewModel::updateMemoContentText,
+        /* MemoContent - D */ onMemoContentRemove = viewModel::removeMemoContent,
+        // event - etc
+        onDialogRequested = { dialogState = it },
         onCategorySelected = viewModel::selectCategory,
         onMemoClick = viewModel::copyMemoToEditor,
-        onMemoContentTextChange = viewModel::updateMemoContentText,
-        onMemoContentRemove = viewModel::removeMemoContent,
-        onAddContentClick = viewModel::addMemoContent,
-        onClearAllClick = viewModel::clearEditingMemo,
-        onAddMemoClick = viewModel::addMemo,
-        onEditMemoClick = viewModel::updateMemo,
-        onDeleteMemoClick = viewModel::deleteMemo,
         onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
-        onAddCategoryClick = viewModel::addCategory,
-        onRenameCategoryClick = viewModel::renameSelectedCategory,
-        onDeleteCategoryClick = viewModel::deleteSelectedCategory,
+        onClearAllClick = viewModel::clearEditingMemo,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MemoScreen(
+    // states
     uiState: MemoUiState,
     drawerState: DrawerState,
     dialogState: MemoScreenDialog?,
-    // events
-    onDialogChange: (MemoScreenDialog?) -> Unit,
+    // events - crud
+    /* Category - C */ onAddCategoryClick: (String) -> Unit,
+    /* Category - U */ onRenameCategoryClick: (Long, String) -> Unit,
+    /* Category - D */ onDeleteCategoryClick: (Long) -> Unit,
+    /* Memo - C */ onAddMemoClick: (Long, Memo) -> Unit,
+    /* Memo - U */ onEditMemoClick: (Memo) -> Unit,
+    /* Memo - D */ onDeleteMemoClick: (Long) -> Unit,
+    /* MemoContent - C */ onAddContentClick: () -> Unit,
+    /* MemoContent - U */ onMemoContentTextChange: (Long, String) -> Unit,
+    /* MemoContent - D */ onMemoContentRemove: (Long) -> Unit,
+    // event - etc
+    onDialogRequested: (MemoScreenDialog?) -> Unit,
     onCategorySelected: (Long) -> Unit,
     onMemoClick: (Memo) -> Unit,
-    onMemoContentTextChange: (Long, String) -> Unit,
-    onMemoContentRemove: (Long) -> Unit,
-    onAddContentClick: () -> Unit,
-    onClearAllClick: () -> Unit,
-    onAddMemoClick: () -> Unit,
-    onEditMemoClick: () -> Unit,
-    onDeleteMemoClick: (Long) -> Unit,
     onMemoEditorToggleButtonClick: () -> Unit,
-    onAddCategoryClick: (String) -> Unit,
-    onRenameCategoryClick: (String) -> Unit,
-    onDeleteCategoryClick: () -> Unit,
+    onClearAllClick: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+
+    val selectedCategory = uiState.selectedCategory
+    val editorState = uiState.editorState
+    val editingMemo = editorState.editingMemo
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             CategorySelector(
                 categories = uiState.categories,
+                onAddCategoryButtonClick = {
+                    onDialogRequested(MemoScreenDialog.CategoryAdd)
+                },
                 onCategorySelected = { categoryId ->
                     onCategorySelected(categoryId)
                     scope.launch { drawerState.close() }
                 },
-                onAddCategoryButtonClick = {
-                    onDialogChange(MemoScreenDialog.CategoryAdd)
-                }
             )
         }
     ) {
-        if (uiState.selectedCategory == null) {
+        if (selectedCategory == null) {
             Scaffold {
                 Box(
                     modifier = Modifier
@@ -132,7 +140,7 @@ private fun MemoScreen(
                 ) {
                     Button(
                         onClick = {
-                            onDialogChange(MemoScreenDialog.CategoryAdd)
+                            onDialogRequested(MemoScreenDialog.CategoryAdd)
                         }
                     ) {
                         Text("새 카테고리 만들기")
@@ -144,7 +152,7 @@ private fun MemoScreen(
                 topBar = {
                     TopAppBar(
                         title = {
-                            Text(uiState.selectedCategory.name)
+                            Text(selectedCategory.name)
                         },
                         navigationIcon = {
                             IconButton(
@@ -161,17 +169,27 @@ private fun MemoScreen(
                         actions = {
                             MemoScreenCategoryMenu(
                                 onRenameClick = {
-                                    onDialogChange(MemoScreenDialog.CategoryRename)
+                                    onDialogRequested(
+                                        MemoScreenDialog.CategoryRename(
+                                            categoryId = selectedCategory.id,
+                                            categoryName = selectedCategory.name
+                                        )
+                                    )
                                 },
                                 onDeleteClick = {
-                                    onDialogChange(MemoScreenDialog.CategoryDelete)
-                                }
+                                    onDialogRequested(
+                                        MemoScreenDialog.CategoryDelete(
+                                            categoryId = selectedCategory.id,
+                                            categoryName = selectedCategory.name
+                                        )
+                                    )
+                                },
                             )
                         }
                     )
                 },
                 bottomBar = {
-                    if (uiState.editorState.isVisible) {
+                    if (editorState.isVisible) {
                         Surface(
                             tonalElevation = 4.dp
                         ) {
@@ -179,16 +197,22 @@ private fun MemoScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(12.dp),
-                                editingMemo = uiState.editorState.editingMemo,
-                                mode = uiState.editorState.mode,
-                                isClearAllEnabled = uiState.editorState.isClearAllEnabled,
-                                isSubmitEnabled = uiState.editorState.isSubmitEnabled,
+                                editingMemo = editingMemo,
+                                mode = editorState.mode,
+                                isClearAllEnabled = editorState.isClearAllEnabled,
+                                isSubmitEnabled = editorState.isSubmitEnabled,
+                                onAddMemoClick = {
+                                    val memo = editingMemo ?: return@MemoEditor
+                                    onAddMemoClick(selectedCategory.id, memo)
+                                },
+                                onEditMemoClick = {
+                                    val memo = editingMemo ?: return@MemoEditor
+                                    onEditMemoClick(memo)
+                                },
+                                onAddContentClick = onAddContentClick,
                                 onMemoContentTextChange = onMemoContentTextChange,
                                 onMemoContentRemove = onMemoContentRemove,
-                                onAddContentClick = onAddContentClick,
                                 onClearAllClick = onClearAllClick,
-                                onAddMemoClick = onAddMemoClick,
-                                onEditMemoClick = onEditMemoClick
                             )
                         }
                     }
@@ -212,34 +236,21 @@ private fun MemoScreen(
                         .padding(paddingValues),
                     onMemoClick = onMemoClick,
                     onMemoLongClick = { memoId ->
-                        onDialogChange(MemoScreenDialog.MemoDelete(memoId))
-                    }
+                        onDialogRequested(MemoScreenDialog.MemoDelete(memoId))
+                    },
                 )
             }
         }
-    }
 
-    MemoScreenDialogHost(
-        dialog = dialogState,
-        targetCategory = uiState.selectedCategory,
-        onDismiss = { onDialogChange(null) },
-        onAddCategory = { name ->
-            onAddCategoryClick(name)
-            onDialogChange(null)
-        },
-        onRenameCategory = { name ->
-            onRenameCategoryClick(name)
-            onDialogChange(null)
-        },
-        onDeleteCategory = {
-            onDeleteCategoryClick()
-            onDialogChange(null)
-        },
-        onDeleteMemo = { memoId ->
-            onDeleteMemoClick(memoId)
-            onDialogChange(null)
-        }
-    )
+        MemoScreenDialogHost(
+            dialogState = dialogState,
+            onDialogRequested = onDialogRequested,
+            onAddCategoryClick = onAddCategoryClick,
+            onRenameCategoryClick = onRenameCategoryClick,
+            onDeleteCategoryClick = onDeleteCategoryClick,
+            onDeleteMemoClick = onDeleteMemoClick,
+        )
+    }
 }
 
 @Composable
@@ -291,43 +302,50 @@ private fun MemoScreenCategoryMenu(
 
 @Composable
 private fun MemoScreenDialogHost(
-    dialog: MemoScreenDialog?,
-    targetCategory: Category?,
-    onDismiss: () -> Unit,
-    onAddCategory: (String) -> Unit,
-    onRenameCategory: (String) -> Unit,
-    onDeleteCategory: () -> Unit,
-    onDeleteMemo: (Long) -> Unit,
+    dialogState: MemoScreenDialog?,
+    onDialogRequested: (MemoScreenDialog?) -> Unit,
+    onAddCategoryClick: (String) -> Unit,
+    onRenameCategoryClick: (Long, String) -> Unit,
+    onDeleteCategoryClick: (Long) -> Unit,
+    onDeleteMemoClick: (Long) -> Unit,
 ) {
-    when (dialog) {
+    when (dialogState) {
         MemoScreenDialog.CategoryAdd ->
             AddCategoryDialog(
-                onDismissRequest = onDismiss,
-                onConfirmation = onAddCategory,
+                onDismissRequest = { onDialogRequested(null) },
+                onConfirmation = { name ->
+                    onAddCategoryClick(name)
+                    onDialogRequested(null)
+                },
             )
 
-        MemoScreenDialog.CategoryRename ->
-            if (targetCategory != null) {
-                RenameCategoryDialog(
-                    currentCategoryName = targetCategory.name,
-                    onDismissRequest = onDismiss,
-                    onConfirmation = onRenameCategory,
-                )
-            }
+        is MemoScreenDialog.CategoryRename ->
+            RenameCategoryDialog(
+                categoryName = dialogState.categoryName,
+                onDismissRequest = { onDialogRequested(null) },
+                onConfirmation = { updatedName ->
+                    onRenameCategoryClick(dialogState.categoryId, updatedName)
+                    onDialogRequested(null)
+                },
+            )
 
-        MemoScreenDialog.CategoryDelete ->
-            if (targetCategory != null) {
-                DeleteCategoryDialog(
-                    categoryName = targetCategory.name,
-                    onDismissRequest = onDismiss,
-                    onConfirmation = onDeleteCategory,
-                )
-            }
+        is MemoScreenDialog.CategoryDelete ->
+            DeleteCategoryDialog(
+                categoryName = dialogState.categoryName,
+                onDismissRequest = { onDialogRequested(null) },
+                onConfirmation = {
+                    onDeleteCategoryClick(dialogState.categoryId)
+                    onDialogRequested(null)
+                },
+            )
 
         is MemoScreenDialog.MemoDelete ->
             DeleteMemoDialog(
-                onDismissRequest = onDismiss,
-                onConfirmation = { onDeleteMemo(dialog.memoId) }
+                onDismissRequest = { onDialogRequested(null) },
+                onConfirmation = {
+                    onDeleteMemoClick(dialogState.memoId)
+                    onDialogRequested(null)
+                }
             )
 
         null -> Unit
@@ -339,13 +357,9 @@ private sealed interface MemoScreenDialog : Serializable {
         private fun readResolve(): Any = CategoryAdd
     }
 
-    data object CategoryRename : MemoScreenDialog {
-        private fun readResolve(): Any = CategoryRename
-    }
+    data class CategoryRename(val categoryId: Long, val categoryName: String) : MemoScreenDialog
 
-    data object CategoryDelete : MemoScreenDialog {
-        private fun readResolve(): Any = CategoryDelete
-    }
+    data class CategoryDelete(val categoryId: Long, val categoryName: String) : MemoScreenDialog
 
     data class MemoDelete(val memoId: Long) : MemoScreenDialog
 }
@@ -366,20 +380,20 @@ fun MemoScreenPreview_Default(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             dialogState = null,
-            onDialogChange = {},
-            onCategorySelected = {},
-            onMemoClick = {},
-            onMemoContentTextChange = { _, _ -> },
-            onMemoContentRemove = {},
-            onAddContentClick = {},
-            onClearAllClick = {},
-            onAddMemoClick = {},
+            onAddCategoryClick = {},
+            onRenameCategoryClick = { _, _ -> },
+            onDeleteCategoryClick = {},
+            onAddMemoClick = { _, _ -> },
             onEditMemoClick = {},
             onDeleteMemoClick = {},
+            onAddContentClick = {},
+            onMemoContentTextChange = { _, _ -> },
+            onMemoContentRemove = {},
+            onDialogRequested = {},
+            onCategorySelected = {},
+            onMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryClick = {},
-            onRenameCategoryClick = {},
-            onDeleteCategoryClick = {},
+            onClearAllClick = {},
         )
     }
 }
@@ -413,20 +427,20 @@ fun MemoScreenPreview_MemoEditorVisible(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             dialogState = null,
-            onDialogChange = {},
-            onCategorySelected = {},
-            onMemoClick = {},
-            onMemoContentTextChange = { _, _ -> },
-            onMemoContentRemove = {},
-            onAddContentClick = {},
-            onClearAllClick = {},
-            onAddMemoClick = {},
+            onAddCategoryClick = {},
+            onRenameCategoryClick = { _, _ -> },
+            onDeleteCategoryClick = {},
+            onAddMemoClick = { _, _ -> },
             onEditMemoClick = {},
             onDeleteMemoClick = {},
+            onAddContentClick = {},
+            onMemoContentTextChange = { _, _ -> },
+            onMemoContentRemove = {},
+            onDialogRequested = {},
+            onCategorySelected = {},
+            onMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryClick = {},
-            onRenameCategoryClick = {},
-            onDeleteCategoryClick = {},
+            onClearAllClick = {},
         )
     }
 }
@@ -447,20 +461,20 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
             dialogState = MemoScreenDialog.CategoryAdd,
-            onDialogChange = {},
-            onCategorySelected = {},
-            onMemoClick = {},
-            onMemoContentTextChange = { _, _ -> },
-            onMemoContentRemove = {},
-            onAddContentClick = {},
-            onClearAllClick = {},
-            onAddMemoClick = {},
+            onAddCategoryClick = {},
+            onRenameCategoryClick = { _, _ -> },
+            onDeleteCategoryClick = {},
+            onAddMemoClick = { _, _ -> },
             onEditMemoClick = {},
             onDeleteMemoClick = {},
+            onAddContentClick = {},
+            onMemoContentTextChange = { _, _ -> },
+            onMemoContentRemove = {},
+            onDialogRequested = {},
+            onCategorySelected = {},
+            onMemoClick = {},
             onMemoEditorToggleButtonClick = {},
-            onAddCategoryClick = {},
-            onRenameCategoryClick = {},
-            onDeleteCategoryClick = {},
+            onClearAllClick = {},
         )
     }
 }

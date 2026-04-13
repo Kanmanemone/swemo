@@ -5,9 +5,10 @@ import com.example.model.Memo
 import kotlinx.coroutines.flow.Flow
 
 interface MemoRepository {
-    fun getCategory(): Flow<List<Category>>
+    fun getCategories(): Flow<List<Category>>
+    suspend fun getCategory(categoryId: Long): Category?
     fun getMemos(): Flow<List<Memo>>
-    fun getMemosByCategory(categoryId: Long): Flow<List<Memo>>
+    fun getMemos(categoryId: Long): Flow<List<Memo>>
 
     suspend fun insertCategory(name: String): Long
     suspend fun insertMemo(memo: Memo): Long

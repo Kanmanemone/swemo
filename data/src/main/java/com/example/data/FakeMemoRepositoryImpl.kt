@@ -45,15 +45,18 @@ class FakeMemoRepositoryImpl @Inject constructor() : MemoRepository {
         )
     )
 
-    override fun getCategory(): Flow<List<Category>> {
+    override fun getCategories(): Flow<List<Category>> {
         return categoriesFlow
     }
+
+    override suspend fun getCategory(categoryId: Long): Category? =
+        categoriesFlow.value.firstOrNull { category -> category.id == categoryId }
 
     override fun getMemos(): Flow<List<Memo>> {
         return memosFlow
     }
 
-    override fun getMemosByCategory(categoryId: Long): Flow<List<Memo>> {
+    override fun getMemos(categoryId: Long): Flow<List<Memo>> {
         return memosFlow.map { memos ->
             memos.filter { it.categoryId == categoryId }
         }

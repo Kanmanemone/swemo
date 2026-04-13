@@ -16,15 +16,15 @@ import com.example.ui.DevicePreviews
 
 @Composable
 internal fun RenameCategoryDialog(
-    currentCategoryName: String,
+    categoryName: String,
     onDismissRequest: () -> Unit,
     onConfirmation: (String) -> Unit,
 ) {
-    var updatedCategoryName by rememberSaveable(currentCategoryName) {
-        mutableStateOf(currentCategoryName)
+    var updatedCategoryName by rememberSaveable(categoryName) {
+        mutableStateOf(categoryName)
     }
     val trimmedCategoryName = updatedCategoryName.trim()
-    val isConfirmEnabled = trimmedCategoryName.isNotBlank() && trimmedCategoryName != currentCategoryName
+    val isConfirmEnabled = trimmedCategoryName.isNotBlank() && trimmedCategoryName != categoryName
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -71,7 +71,7 @@ internal fun RenameCategoryDialog(
 fun RenameDialogPreview() {
     SwemoTheme {
         RenameCategoryDialog(
-            currentCategoryName = "Example 카테고리",
+            categoryName = "Example",
             onDismissRequest = {},
             onConfirmation = {},
         )

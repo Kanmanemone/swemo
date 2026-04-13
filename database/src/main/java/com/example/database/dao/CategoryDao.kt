@@ -12,6 +12,9 @@ interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY id")
     fun getCategories(): Flow<List<CategoryEntity>>
 
+    @Query("SELECT * FROM categories WHERE id = :categoryId")
+    suspend fun getCategory(categoryId: Long): CategoryEntity?
+
     @Insert
     suspend fun insertCategory(category: CategoryEntity): Long
 

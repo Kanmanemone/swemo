@@ -25,7 +25,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     private val categories: StateFlow<List<Category>> =
         repository
-            .getCategory()
+            .getCategories()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingPolicy,
@@ -53,7 +53,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
                 if (categoryId == null) {
                     flowOf(emptyList())
                 } else {
-                    repository.getMemosByCategory(categoryId)
+                    repository.getMemos(categoryId)
                 }
             }
             .stateIn(
@@ -66,6 +66,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     private val editingMemo = MutableStateFlow<Memo?>(defaultEditingMemo())
 
+    // states
     val uiState: StateFlow<MemoUiState> = combine(
         categories,
         selectedCategory,
@@ -97,14 +98,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         initialValue = MemoUiState()
     )
 
-    fun selectCategory(categoryId: Long) {
-        selectedCategoryId.value = categoryId
-    }
-
-    fun toggleEditorVisibility() {
-        isEditorVisible.value = !isEditorVisible.value
-    }
-
+    // events - crud
+    // Category - C
     fun addCategory(name: String) {
         val trimmedName = name.trim()
         if (trimmedName.isBlank()) return
@@ -114,22 +109,22 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         }
     }
 
-    fun renameSelectedCategory(name: String) {
-        val category = selectedCategory.value ?: return
+    // Category - U
+    fun renameCategory(categoryId: Long, name: String) {
         val trimmedName = name.trim()
-
         if (trimmedName.isBlank()) return
-        if (trimmedName == category.name) return
 
         viewModelScope.launch {
+            val category = repository.getCategory(categoryId) ?: return@launch
+            if (trimmedName == category.name) return@launch
             repository.updateCategoryName(category.id, trimmedName)
         }
     }
 
-    fun deleteSelectedCategory() {
+    // Category - D
+    fun deleteCategory(categoryId: Long) {
         viewModelScope.launch {
-            val id = selectedCategoryId.value ?: return@launch
-            val deletedCategoryId = repository.deleteCategory(id)
+            val deletedCategoryId = repository.deleteCategory(categoryId)
             // 만약 MemoEditor에서 편집 중인 메모가 삭제한 카테고리에 속했다면, 해당 편집을 취소
             if (deletedCategoryId == editingMemo.value?.categoryId) {
                 resetEditingMemo()
@@ -137,6 +132,34 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         }
     }
 
+    // Memo - C
+    fun addMemo(categoryId: Long, memo: Memo) {
+        viewModelScope.launch {
+            repository.insertMemo(memo.copy(categoryId = categoryId))
+            resetEditingMemo()
+        }
+    }
+
+    // Memo - U
+    fun updateMemo(memo: Memo) {
+        viewModelScope.launch {
+            repository.updateMemo(memo)
+            resetEditingMemo()
+        }
+    }
+
+    // Memo - D
+    fun deleteMemo(memoId: Long) {
+        viewModelScope.launch {
+            val deletedMemoId = repository.deleteMemo(memoId)
+            // 삭제한 메모가 만약 MemoEditor에서 편집 중인 메모였다면, 해당 편집을 취소
+            if (deletedMemoId == editingMemo.value?.id) {
+                resetEditingMemo()
+            }
+        }
+    }
+
+    // MemoContent - C
     fun addMemoContent() {
         val currentEditingMemo = editingMemo.value ?: return
         editingMemo.value = currentEditingMemo.copy(
@@ -148,6 +171,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         )
     }
 
+    // MemoContent - U
     fun updateMemoContentText(contentId: Long, text: String) {
         val currentEditingMemo = editingMemo.value ?: return
         editingMemo.value = currentEditingMemo.copy(
@@ -161,6 +185,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         )
     }
 
+    // MemoContent - D
     fun removeMemoContent(contentId: Long) {
         val currentEditingMemo = editingMemo.value ?: return
         editingMemo.value = currentEditingMemo.copy(
@@ -170,44 +195,22 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         )
     }
 
+    // event - etc
+    fun selectCategory(categoryId: Long) {
+        selectedCategoryId.value = categoryId
+    }
+
     fun copyMemoToEditor(memo: Memo) {
         editingMemo.value = memo
         isEditorVisible.value = true
     }
 
-    fun addMemo() {
-        val currentEditingMemo = editingMemo.value ?: return
-        val currentSelectedCategoryId = selectedCategory.value?.id ?: return
-        if (currentEditingMemo.contents.isEmpty()) return
-
-        viewModelScope.launch {
-            repository.insertMemo(currentEditingMemo.copy(categoryId = currentSelectedCategoryId))
-            resetEditingMemo()
-        }
-    }
-
-    fun updateMemo() {
-        val currentEditingMemo = editingMemo.value ?: return
-        if (currentEditingMemo.contents.isEmpty()) return
-
-        viewModelScope.launch {
-            repository.updateMemo(currentEditingMemo)
-            resetEditingMemo()
-        }
+    fun toggleEditorVisibility() {
+        isEditorVisible.value = !isEditorVisible.value
     }
 
     fun clearEditingMemo() {
         resetEditingMemo()
-    }
-
-    fun deleteMemo(memoId: Long) {
-        viewModelScope.launch {
-            val deletedMemoId = repository.deleteMemo(memoId)
-            // 삭제한 메모가 만약 MemoEditor에서 편집 중인 메모였다면, 해당 편집을 취소
-            if (deletedMemoId == editingMemo.value?.id) {
-                resetEditingMemo()
-            }
-        }
     }
 
     private fun resetEditingMemo() {

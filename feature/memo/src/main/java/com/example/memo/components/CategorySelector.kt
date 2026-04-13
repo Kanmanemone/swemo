@@ -31,8 +31,8 @@ import com.example.ui.DevicePreviews
 @Composable
 internal fun CategorySelector(
     categories: List<Category>,
-    onCategorySelected: (Long) -> Unit,
     onAddCategoryButtonClick: () -> Unit,
+    onCategorySelected: (Long) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -97,8 +97,8 @@ fun CategorySelectorPreview() {
                 Category(id = 2L, name = "업무"),
                 Category(id = 3L, name = "개인"),
             ),
-            onCategorySelected = {},
             onAddCategoryButtonClick = {},
+            onCategorySelected = {},
         )
     }
 }

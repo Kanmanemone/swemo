@@ -24,12 +24,12 @@ internal fun MemoEditor(
     mode: EditorMode,
     isClearAllEnabled: Boolean = false,
     isSubmitEnabled: Boolean = false,
+    onAddMemoClick: () -> Unit = {},
+    onEditMemoClick: () -> Unit = {},
+    onAddContentClick: () -> Unit = {},
     onMemoContentTextChange: (Long, String) -> Unit = { _, _ -> },
     onMemoContentRemove: (Long) -> Unit = {},
-    onAddContentClick: () -> Unit = {},
     onClearAllClick: () -> Unit = {},
-    onAddMemoClick: () -> Unit = {},
-    onEditMemoClick: () -> Unit = {}
 ) {
     if (editingMemo != null) {
         Column(
@@ -42,16 +42,16 @@ internal fun MemoEditor(
                     .fillMaxWidth()
                     .heightIn(max = 240.dp),
                 onMemoContentTextChange = onMemoContentTextChange,
-                onMemoContentRemove = onMemoContentRemove
+                onMemoContentRemove = onMemoContentRemove,
             )
             MemoEditorActionBar(
                 mode = mode,
                 isClearAllEnabled = isClearAllEnabled,
                 isSubmitEnabled = isSubmitEnabled,
+                onAddMemoClick = onAddMemoClick,
+                onEditMemoClick = onEditMemoClick,
                 onAddContentClick = onAddContentClick,
                 onClearAllClick = onClearAllClick,
-                onAddMemoClick = onAddMemoClick,
-                onEditMemoClick = onEditMemoClick
             )
         }
     }

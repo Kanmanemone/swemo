@@ -19,10 +19,10 @@ internal fun MemoEditorActionBar(
     mode: EditorMode = EditorMode.Insert,
     isClearAllEnabled: Boolean = false,
     isSubmitEnabled: Boolean = false,
+    onAddMemoClick: () -> Unit = {},
+    onEditMemoClick: () -> Unit = {},
     onAddContentClick: () -> Unit = {},
     onClearAllClick: () -> Unit = {},
-    onAddMemoClick: () -> Unit = {},
-    onEditMemoClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
