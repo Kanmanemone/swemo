@@ -10,6 +10,12 @@ captures/
 # Local configuration (SDK path, etc.)
 local.properties
 
+# Spec Kit: local/session-only state, not shared across the team
+.specify/feature.json
+.specify/extensions/*/local-config.yml
+.specify/extensions/.cache/
+.specify/extensions/.backup/
+
 # IntelliJ / Android Studio project files, because
 # the project can be re-imported from settings.gradle.kts
 *.iml
