@@ -12,10 +12,8 @@ data class MemoUiState(
 ) {
     data class EditorState(
         val isVisible: Boolean = false,
-        val editingMemo: Memo? = null,
+        val editTarget: Memo? = null,
         val mode: EditorMode = EditorMode.Insert,
-        val isClearAllEnabled: Boolean = false,
-        val isSubmitEnabled: Boolean = false
     )
 }
 

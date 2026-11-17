@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
@@ -23,7 +24,8 @@ internal fun MemoCard(
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
 ) {
-    val contentTexts = memo.contents.joinToString(separator = "\n") { memoContent -> "${memoContent.label}: ${memoContent.text}" }
+    // 메모 내용이 바뀌면 상태를 새로 만든다 (MemoFeed는 같은 id의 카드를 재사용한다)
+    val state = remember(memo.contents) { bulletedListTextFieldState(memo.contents.toBulletedListText()) }
 
     Card(
         modifier = modifier
@@ -36,8 +38,11 @@ internal fun MemoCard(
         Column(
             modifier = Modifier.padding(16.dp),
         ) {
-            Text(
-                text = contentTexts,
+            BulletedListTextField(
+                state = state,
+                enabled = false, // 탭·길게 누르기를 카드가 받게 한다. 글자색은 textStyle로 직접 주므로 흐려지지 않는다
+                textStyle = bulletedListTextStyle(),
+                pillStyle = PillStyle(color = MaterialTheme.colorScheme.secondaryContainer),
             )
         }
     }

@@ -19,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +45,7 @@ import com.example.memo.components.MemoFeed
 import com.example.memo.components.RenameCategoryDialog
 import com.example.model.Category
 import com.example.model.Memo
+import com.example.memo.components.bulletedListTextFieldState
 import com.example.model.MemoContent
 import com.example.ui.CategoryPreviewParameterProvider
 import com.example.ui.DevicePreviews
@@ -66,6 +68,7 @@ fun MemoScreen(
         uiState = uiState,
         drawerState = drawerState,
         dialogState = dialogState,
+        editorTextState = viewModel.editorTextState,
         // events - crud
         /* Category - C */ onAddCategoryClick = viewModel::addCategory,
         /* Category - U */ onRenameCategoryClick = viewModel::renameCategory,
@@ -73,15 +76,12 @@ fun MemoScreen(
         /* Memo - C */ onAddMemoClick = viewModel::addMemo,
         /* Memo - U */ onEditMemoClick = viewModel::updateMemo,
         /* Memo - D */ onDeleteMemoClick = viewModel::deleteMemo,
-        /* MemoContent - C */ onAddContentClick = viewModel::addMemoContent,
-        /* MemoContent - U */ onMemoContentTextChange = viewModel::updateMemoContentText,
-        /* MemoContent - D */ onMemoContentRemove = viewModel::removeMemoContent,
         // event - etc
         onDialogRequested = { dialogState = it },
         onCategorySelected = viewModel::selectCategory,
         onMemoClick = viewModel::copyMemoToEditor,
         onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
-        onClearAllClick = viewModel::clearEditingMemo,
+        onClearAllClick = viewModel::clearEditor,
     )
 }
 
@@ -92,16 +92,14 @@ private fun MemoScreen(
     uiState: MemoUiState,
     drawerState: DrawerState,
     dialogState: MemoScreenDialog?,
+    editorTextState: TextFieldState,
     // events - crud
     /* Category - C */ onAddCategoryClick: (String) -> Unit,
     /* Category - U */ onRenameCategoryClick: (Long, String) -> Unit,
     /* Category - D */ onDeleteCategoryClick: (Long) -> Unit,
-    /* Memo - C */ onAddMemoClick: (Long, Memo) -> Unit,
-    /* Memo - U */ onEditMemoClick: (Memo) -> Unit,
+    /* Memo - C */ onAddMemoClick: (Long) -> Unit,
+    /* Memo - U */ onEditMemoClick: () -> Unit,
     /* Memo - D */ onDeleteMemoClick: (Long) -> Unit,
-    /* MemoContent - C */ onAddContentClick: () -> Unit,
-    /* MemoContent - U */ onMemoContentTextChange: (Long, String) -> Unit,
-    /* MemoContent - D */ onMemoContentRemove: (Long) -> Unit,
     // event - etc
     onDialogRequested: (MemoScreenDialog?) -> Unit,
     onCategorySelected: (Long) -> Unit,
@@ -113,7 +111,7 @@ private fun MemoScreen(
 
     val selectedCategory = uiState.selectedCategory
     val editorState = uiState.editorState
-    val editingMemo = editorState.editingMemo
+    val editTarget = editorState.editTarget
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -197,21 +195,11 @@ private fun MemoScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(12.dp),
-                                editingMemo = editingMemo,
+                                editTarget = editTarget,
+                                textState = editorTextState,
                                 mode = editorState.mode,
-                                isClearAllEnabled = editorState.isClearAllEnabled,
-                                isSubmitEnabled = editorState.isSubmitEnabled,
-                                onAddMemoClick = {
-                                    val memo = editingMemo ?: return@MemoEditor
-                                    onAddMemoClick(selectedCategory.id, memo)
-                                },
-                                onEditMemoClick = {
-                                    val memo = editingMemo ?: return@MemoEditor
-                                    onEditMemoClick(memo)
-                                },
-                                onAddContentClick = onAddContentClick,
-                                onMemoContentTextChange = onMemoContentTextChange,
-                                onMemoContentRemove = onMemoContentRemove,
+                                onAddMemoClick = { onAddMemoClick(selectedCategory.id) },
+                                onEditMemoClick = onEditMemoClick,
                                 onClearAllClick = onClearAllClick,
                             )
                         }
@@ -380,15 +368,13 @@ fun MemoScreenPreview_Default(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             dialogState = null,
+            editorTextState = remember { bulletedListTextFieldState() },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
             onDeleteCategoryClick = {},
-            onAddMemoClick = { _, _ -> },
+            onAddMemoClick = {},
             onEditMemoClick = {},
             onDeleteMemoClick = {},
-            onAddContentClick = {},
-            onMemoContentTextChange = { _, _ -> },
-            onMemoContentRemove = {},
             onDialogRequested = {},
             onCategorySelected = {},
             onMemoClick = {},
@@ -413,7 +399,7 @@ fun MemoScreenPreview_MemoEditorVisible(
                 allLabels = setOf("label 3", "label 5"),
                 editorState = MemoUiState.EditorState(
                     isVisible = true,
-                    editingMemo = Memo(
+                    editTarget = Memo(
                         categoryId = 0L,
                         id = 0L,
                         contents = listOf(
@@ -422,20 +408,17 @@ fun MemoScreenPreview_MemoEditorVisible(
                             MemoContent(id = -2L, label = "label 7", text = "Fake memo 7"),
                         )
                     ),
-                    isSubmitEnabled = true,
                 )
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             dialogState = null,
+            editorTextState = remember { bulletedListTextFieldState("label 3: Fake memo 7\nlabel 5: Fake memo 7\nlabel 7: Fake memo 7") },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
             onDeleteCategoryClick = {},
-            onAddMemoClick = { _, _ -> },
+            onAddMemoClick = {},
             onEditMemoClick = {},
             onDeleteMemoClick = {},
-            onAddContentClick = {},
-            onMemoContentTextChange = { _, _ -> },
-            onMemoContentRemove = {},
             onDialogRequested = {},
             onCategorySelected = {},
             onMemoClick = {},
@@ -461,15 +444,13 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
             dialogState = MemoScreenDialog.CategoryAdd,
+            editorTextState = remember { bulletedListTextFieldState() },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
             onDeleteCategoryClick = {},
-            onAddMemoClick = { _, _ -> },
+            onAddMemoClick = {},
             onEditMemoClick = {},
             onDeleteMemoClick = {},
-            onAddContentClick = {},
-            onMemoContentTextChange = { _, _ -> },
-            onMemoContentRemove = {},
             onDialogRequested = {},
             onCategorySelected = {},
             onMemoClick = {},

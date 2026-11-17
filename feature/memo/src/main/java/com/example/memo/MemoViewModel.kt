@@ -5,7 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.MemoRepository
 import com.example.model.Category
 import com.example.model.Memo
-import com.example.model.MemoContent
+import androidx.compose.foundation.text.input.TextFieldState
+import com.example.memo.components.bulletedListTextFieldState
+import com.example.memo.components.setBulletedListText
+import com.example.memo.components.toBulletedListText
+import com.example.memo.components.toMemoContents
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,7 +68,15 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     private val isEditorVisible = MutableStateFlow(false)
 
-    private val editingMemo = MutableStateFlow<Memo?>(defaultEditingMemo())
+    // 저장할 때 어느 메모(id, categoryId)에 쓸지. id가 0이면 새 메모. 내용(contents)은 editorTextState가 원본이다
+    private val editTarget = MutableStateFlow<Memo?>(defaultEditTarget())
+
+    /**
+     * MemoEditor 입력란의 상태. 편집 중인 메모 내용의 원본이다.
+     *
+     * - 저장할 때 이 텍스트를 한 번 MemoContent 목록으로 바꿔 [editTarget]에 담는다.
+     */
+    internal val editorTextState: TextFieldState = bulletedListTextFieldState()
 
     // states
     val uiState: StateFlow<MemoUiState> = combine(
@@ -72,8 +84,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         selectedCategory,
         memos,
         isEditorVisible,
-        editingMemo
-    ) { categories, selectedCategory, memos, isEditorVisible, editingMemo ->
+        editTarget
+    ) { categories, selectedCategory, memos, isEditorVisible, editTarget ->
         MemoUiState(
             categories = categories,
             selectedCategory = selectedCategory,
@@ -86,10 +98,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
             editorState =
                 MemoUiState.EditorState(
                     isVisible = isEditorVisible,
-                    editingMemo = editingMemo,
-                    mode = editingMemo.asEditorMode(),
-                    isClearAllEnabled = (editingMemo != null) && (editingMemo != defaultEditingMemo()),
-                    isSubmitEnabled = editingMemo.hasContents()
+                    editTarget = editTarget,
+                    mode = editTarget.asEditorMode(),
                 )
         )
     }.stateIn(
@@ -126,25 +136,27 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         viewModelScope.launch {
             val deletedCategoryId = repository.deleteCategory(categoryId)
             // 만약 MemoEditor에서 편집 중인 메모가 삭제한 카테고리에 속했다면, 해당 편집을 취소
-            if (deletedCategoryId == editingMemo.value?.categoryId) {
-                resetEditingMemo()
+            if (deletedCategoryId == editTarget.value?.categoryId) {
+                resetEditor()
             }
         }
     }
 
     // Memo - C
-    fun addMemo(categoryId: Long, memo: Memo) {
+    fun addMemo(categoryId: Long) {
+        val memo = editTarget.value ?: return
         viewModelScope.launch {
-            repository.insertMemo(memo.copy(categoryId = categoryId))
-            resetEditingMemo()
+            repository.insertMemo(memo.copy(categoryId = categoryId, contents = editorTextState.text.toMemoContents()))
+            resetEditor()
         }
     }
 
     // Memo - U
-    fun updateMemo(memo: Memo) {
+    fun updateMemo() {
+        val memo = editTarget.value ?: return
         viewModelScope.launch {
-            repository.updateMemo(memo)
-            resetEditingMemo()
+            repository.updateMemo(memo.copy(contents = editorTextState.text.toMemoContents()))
+            resetEditor()
         }
     }
 
@@ -153,46 +165,10 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         viewModelScope.launch {
             val deletedMemoId = repository.deleteMemo(memoId)
             // 삭제한 메모가 만약 MemoEditor에서 편집 중인 메모였다면, 해당 편집을 취소
-            if (deletedMemoId == editingMemo.value?.id) {
-                resetEditingMemo()
+            if (deletedMemoId == editTarget.value?.id) {
+                resetEditor()
             }
         }
-    }
-
-    // MemoContent - C
-    fun addMemoContent() {
-        val currentEditingMemo = editingMemo.value ?: return
-        editingMemo.value = currentEditingMemo.copy(
-            contents = currentEditingMemo.contents + MemoContent(
-                id = nextTemporaryId(currentEditingMemo),
-                label = nextMemoContentLabel(currentEditingMemo.contents),
-                text = ""
-            )
-        )
-    }
-
-    // MemoContent - U
-    fun updateMemoContentText(contentId: Long, text: String) {
-        val currentEditingMemo = editingMemo.value ?: return
-        editingMemo.value = currentEditingMemo.copy(
-            contents = currentEditingMemo.contents.map { content ->
-                if (content.id == contentId) {
-                    content.copy(text = text)
-                } else {
-                    content
-                }
-            }
-        )
-    }
-
-    // MemoContent - D
-    fun removeMemoContent(contentId: Long) {
-        val currentEditingMemo = editingMemo.value ?: return
-        editingMemo.value = currentEditingMemo.copy(
-            contents = currentEditingMemo.contents.filterNot { content ->
-                content.id == contentId
-            }
-        )
     }
 
     // event - etc
@@ -201,7 +177,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
     }
 
     fun copyMemoToEditor(memo: Memo) {
-        editingMemo.value = memo
+        loadIntoEditor(memo)
         isEditorVisible.value = true
     }
 
@@ -209,12 +185,17 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         isEditorVisible.value = !isEditorVisible.value
     }
 
-    fun clearEditingMemo() {
-        resetEditingMemo()
+    fun clearEditor() {
+        resetEditor()
     }
 
-    private fun resetEditingMemo() {
-        editingMemo.value = defaultEditingMemo()
+    private fun resetEditor() {
+        loadIntoEditor(defaultEditTarget())
+    }
+
+    private fun loadIntoEditor(memo: Memo) {
+        editTarget.value = memo
+        editorTextState.setBulletedListText(memo.contents.toBulletedListText())
     }
 }
 
@@ -235,31 +216,12 @@ private fun determineCategory(
             ?: categories.first()
     }
 
-private fun defaultEditingMemo(): Memo =
+private fun defaultEditTarget(): Memo =
     Memo(
         categoryId = 0L,
         id = 0L,
-        contents = listOf(MemoContent(id = 0L, label = "label 1", text = ""))
+        contents = emptyList()
     )
-
-private fun nextTemporaryId(memo: Memo): Long {
-    val minId = memo.contents.minOfOrNull(MemoContent::id) ?: 0L
-    return minOf(minId, 0L) - 1L
-}
-
-//  마지막 라벨이 label n이면 label n+1, 내용이 없거나 마지막 라벨이 그 형식이 아니면 label 1
-private fun nextMemoContentLabel(contents: List<MemoContent>): String {
-    val lastLabelNumber = contents
-        .lastOrNull()
-        ?.label
-        ?.removePrefix("label ")
-        ?.toIntOrNull()
-
-    return "label ${if (lastLabelNumber != null) lastLabelNumber + 1 else 1}"
-}
-
-private fun Memo?.hasContents(): Boolean =
-    this?.contents?.isNotEmpty() == true
 
 // Memo.id가 1 이상이면 Database에 있는 Memo라는 의미이므로 Update 모드
 private fun Memo?.asEditorMode(): EditorMode =

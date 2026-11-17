@@ -18,10 +18,8 @@ import com.example.ui.DevicePreviews
 internal fun MemoEditorActionBar(
     mode: EditorMode = EditorMode.Insert,
     isClearAllEnabled: Boolean = false,
-    isSubmitEnabled: Boolean = false,
     onAddMemoClick: () -> Unit = {},
     onEditMemoClick: () -> Unit = {},
-    onAddContentClick: () -> Unit = {},
     onClearAllClick: () -> Unit = {},
 ) {
     Row(
@@ -29,16 +27,6 @@ internal fun MemoEditorActionBar(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Button(
-            onClick = onAddContentClick,
-            shape = RoundedCornerShape(50),
-        ) {
-            Icon(
-                imageVector = SwemoIcons.Add,
-                contentDescription = null
-            )
-        }
-
         Button(
             onClick = onClearAllClick,
             enabled = isClearAllEnabled,
@@ -55,7 +43,6 @@ internal fun MemoEditorActionBar(
                 EditorMode.Insert -> onAddMemoClick
                 EditorMode.Update -> onEditMemoClick
             },
-            enabled = isSubmitEnabled,
             shape = RoundedCornerShape(50),
         ) {
             Icon(

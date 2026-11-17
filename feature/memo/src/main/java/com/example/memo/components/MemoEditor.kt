@@ -5,11 +5,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.EditorMode
@@ -20,37 +25,34 @@ import com.example.ui.DevicePreviews
 @Composable
 internal fun MemoEditor(
     modifier: Modifier = Modifier,
-    editingMemo: Memo?,
+    editTarget: Memo?,
+    textState: TextFieldState,
     mode: EditorMode,
-    isClearAllEnabled: Boolean = false,
-    isSubmitEnabled: Boolean = false,
     onAddMemoClick: () -> Unit = {},
     onEditMemoClick: () -> Unit = {},
-    onAddContentClick: () -> Unit = {},
-    onMemoContentTextChange: (Long, String) -> Unit = { _, _ -> },
-    onMemoContentRemove: (Long) -> Unit = {},
     onClearAllClick: () -> Unit = {},
 ) {
-    if (editingMemo != null) {
+    if (editTarget != null) {
         Column(
             modifier = modifier
                 .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
         ) {
-            EditableFieldList(
-                memo = editingMemo,
+            val textStyle = bulletedListTextStyle()
+            BulletedListTextField(
+                state = textState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 240.dp),
-                onMemoContentTextChange = onMemoContentTextChange,
-                onMemoContentRemove = onMemoContentRemove,
+                    .heightIn(max = 240.dp)
+                    .padding(vertical = 8.dp),
+                textStyle = textStyle,
+                cursorBrush = SolidColor(textStyle.color), // 기본값(검정)은 다크모드에서 안 보인다
+                pillStyle = PillStyle(color = MaterialTheme.colorScheme.secondaryContainer),
             )
             MemoEditorActionBar(
                 mode = mode,
-                isClearAllEnabled = isClearAllEnabled,
-                isSubmitEnabled = isSubmitEnabled,
+                isClearAllEnabled = mode == EditorMode.Update || !textState.isBulletedListEmpty(),
                 onAddMemoClick = onAddMemoClick,
                 onEditMemoClick = onEditMemoClick,
-                onAddContentClick = onAddContentClick,
                 onClearAllClick = onClearAllClick,
             )
         }
@@ -62,7 +64,7 @@ internal fun MemoEditor(
 fun MemoEditorPreview() {
     SwemoTheme {
         MemoEditor(
-            editingMemo = Memo(
+            editTarget = Memo(
                 categoryId = 0L,
                 id = 0L,
                 contents = listOf(
@@ -71,11 +73,8 @@ fun MemoEditorPreview() {
                     MemoContent(id = 3L, label = "label 3", text = "Fake memo 7"),
                 )
             ),
+            textState = remember { bulletedListTextFieldState("label 1: Fake memo 7\n사과: 빨간 것\n라벨 없는 줄") },
             mode = EditorMode.Insert,
-            isClearAllEnabled = true,
-            isSubmitEnabled = true,
-            onMemoContentTextChange = { _, _ -> },
-            onMemoContentRemove = {},
         )
     }
 }
