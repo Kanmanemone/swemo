@@ -33,7 +33,7 @@ private val PILL_COLON_STYLE = SpanStyle(color = Color.Transparent)
  */
 @Immutable
 internal data class PillStyle(
-    val color: Color = Color.LightGray,
+    val color: Color,
     val verticalInset: Dp = 2.dp,
 )
 

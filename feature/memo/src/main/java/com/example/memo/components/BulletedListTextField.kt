@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalDensity
@@ -49,7 +48,7 @@ private const val BULLET = "•  "
  *     - `inputTransformation`은 sentinel 규칙(`BulletedListTransformation.kt`)이 차지한다.
  *     - `outputTransformation`은 Pill 라벨 뒤 `:` 숨기기(`Pill.kt`)가 차지한다.
  * - [state]는 [bulletedListTextFieldState]로 만든 것이어야 한다. 맨 앞 sentinel을 전제로 동작하기 때문이다.
- * - 기본값도 `BasicTextField`와 같다. 테마 색(다크모드 등)이 필요하면 호출부가 [textStyle], [cursorBrush]로 넘긴다.
+ * - 기본값도 `BasicTextField`와 같다. 단, [cursorBrush]와 [pillStyle]은 테마 색을 따른다.
  * - 문단 맨 앞이 `라벨: `이면 라벨을 Pill로 보여 준다. 규칙과 그리기는 `Pill.kt`에 있다.
  *
  * @param pillStyle Pill 모양.
@@ -66,10 +65,10 @@ internal fun BulletedListTextField(
     lineLimits: TextFieldLineLimits = TextFieldLineLimits.Default,
     onTextLayout: (Density.(getResult: () -> TextLayoutResult?) -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
-    cursorBrush: Brush = SolidColor(Color.Black), // BasicTextFieldDefaults.CursorBrush와 같은 값 (그 객체는 private이라 직접 못 쓴다)
+    cursorBrush: Brush = SolidColor(LocalContentColor.current),
     decorator: TextFieldDecorator? = null,
     scrollState: ScrollState = rememberScrollState(),
-    pillStyle: PillStyle = PillStyle(),
+    pillStyle: PillStyle = PillStyle(MaterialTheme.colorScheme.primaryContainer),
 ) {
     /** 불릿 한 개를 [textStyle]로 측정한 결과. 불릿 칸의 폭과 그리기에 같이 쓴다. */
     val textMeasurer = rememberTextMeasurer()

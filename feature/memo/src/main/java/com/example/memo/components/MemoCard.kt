@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -33,7 +34,8 @@ internal fun MemoCard(
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
-            )
+            ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -42,7 +44,6 @@ internal fun MemoCard(
                 state = state,
                 enabled = false, // 탭·길게 누르기를 카드가 받게 한다. 글자색은 textStyle로 직접 주므로 흐려지지 않는다
                 textStyle = bulletedListTextStyle(),
-                pillStyle = PillStyle(color = MaterialTheme.colorScheme.secondaryContainer),
             )
         }
     }

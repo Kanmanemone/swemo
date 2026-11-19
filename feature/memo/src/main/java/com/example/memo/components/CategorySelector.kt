@@ -65,7 +65,10 @@ internal fun CategorySelector(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(text = category.name)
+                        Text(
+                            text = category.name,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
                     }
                 }
             }

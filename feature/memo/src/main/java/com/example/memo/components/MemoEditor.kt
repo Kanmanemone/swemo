@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.EditorMode
@@ -45,8 +43,6 @@ internal fun MemoEditor(
                     .heightIn(max = 240.dp)
                     .padding(vertical = 8.dp),
                 textStyle = textStyle,
-                cursorBrush = SolidColor(textStyle.color), // 기본값(검정)은 다크모드에서 안 보인다
-                pillStyle = PillStyle(color = MaterialTheme.colorScheme.secondaryContainer),
             )
             MemoEditorActionBar(
                 mode = mode,
