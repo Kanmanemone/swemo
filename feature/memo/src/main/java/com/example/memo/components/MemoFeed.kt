@@ -19,7 +19,7 @@ internal fun MemoFeed(
     memos: List<Memo>,
     modifier: Modifier = Modifier,
     onMemoClick: (Memo) -> Unit = {},
-    onMemoLongClick: (Long) -> Unit = {},
+    onMemoDeleteClick: (Long) -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier,
@@ -34,7 +34,7 @@ internal fun MemoFeed(
             MemoCard(
                 memo = memo,
                 onClick = { onMemoClick(memo) },
-                onLongClick = { onMemoLongClick(memo.id) }
+                onDeleteClick = { onMemoDeleteClick(memo.id) },
             )
         }
     }

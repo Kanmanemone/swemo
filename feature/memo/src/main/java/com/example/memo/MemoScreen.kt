@@ -39,7 +39,6 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.components.AddCategoryDialog
 import com.example.memo.components.CategorySelector
 import com.example.memo.components.DeleteCategoryDialog
-import com.example.memo.components.DeleteMemoDialog
 import com.example.memo.components.MemoEditor
 import com.example.memo.components.MemoFeed
 import com.example.memo.components.RenameCategoryDialog
@@ -124,6 +123,16 @@ private fun MemoScreen(
                 onCategorySelected = { categoryId ->
                     onCategorySelected(categoryId)
                     scope.launch { drawerState.close() }
+                },
+                onRenameCategoryClick = { category ->
+                    onDialogRequested(
+                        MemoScreenDialog.CategoryRename(category.id, category.name)
+                    )
+                },
+                onDeleteCategoryClick = { category ->
+                    onDialogRequested(
+                        MemoScreenDialog.CategoryDelete(category.id, category.name)
+                    )
                 },
             )
         }
@@ -223,9 +232,7 @@ private fun MemoScreen(
                         .fillMaxSize()
                         .padding(paddingValues),
                     onMemoClick = onMemoClick,
-                    onMemoLongClick = { memoId ->
-                        onDialogRequested(MemoScreenDialog.MemoDelete(memoId))
-                    },
+                    onMemoDeleteClick = onDeleteMemoClick,
                 )
             }
         }
@@ -236,7 +243,6 @@ private fun MemoScreen(
             onAddCategoryClick = onAddCategoryClick,
             onRenameCategoryClick = onRenameCategoryClick,
             onDeleteCategoryClick = onDeleteCategoryClick,
-            onDeleteMemoClick = onDeleteMemoClick,
         )
     }
 }
@@ -295,7 +301,6 @@ private fun MemoScreenDialogHost(
     onAddCategoryClick: (String) -> Unit,
     onRenameCategoryClick: (Long, String) -> Unit,
     onDeleteCategoryClick: (Long) -> Unit,
-    onDeleteMemoClick: (Long) -> Unit,
 ) {
     when (dialogState) {
         MemoScreenDialog.CategoryAdd ->
@@ -327,15 +332,6 @@ private fun MemoScreenDialogHost(
                 },
             )
 
-        is MemoScreenDialog.MemoDelete ->
-            DeleteMemoDialog(
-                onDismissRequest = { onDialogRequested(null) },
-                onConfirmation = {
-                    onDeleteMemoClick(dialogState.memoId)
-                    onDialogRequested(null)
-                }
-            )
-
         null -> Unit
     }
 }
@@ -349,7 +345,6 @@ private sealed interface MemoScreenDialog : Serializable {
 
     data class CategoryDelete(val categoryId: Long, val categoryName: String) : MemoScreenDialog
 
-    data class MemoDelete(val memoId: Long) : MemoScreenDialog
 }
 
 @DevicePreviews

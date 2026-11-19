@@ -1,8 +1,12 @@
 package com.example.memo.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,27 +16,35 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.icon.SwemoIcons
 import com.example.designsystem.theme.SwemoTheme
 import com.example.model.Category
 import com.example.ui.DevicePreviews
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun CategorySelector(
     categories: List<Category>,
     onAddCategoryButtonClick: () -> Unit,
     onCategorySelected: (Long) -> Unit,
+    onRenameCategoryClick: (Category) -> Unit = {},
+    onDeleteCategoryClick: (Category) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -54,20 +66,46 @@ internal fun CategorySelector(
                 items = categories,
                 key = { category -> category.id }
             ) { category ->
-                TextButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        onCategorySelected(category.id)
-                    }
-                ) {
+                var isMenuExpanded by remember(category.id) { mutableStateOf(false) }
+
+                Box(modifier = Modifier.fillMaxWidth()) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .combinedClickable(
+                                onClick = { onCategorySelected(category.id) },
+                                onLongClickLabel = "카테고리 메뉴 열기",
+                                onLongClick = { isMenuExpanded = true },
+                                role = Role.Button,
+                            )
+                            .padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = category.name,
                             color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = isMenuExpanded,
+                        onDismissRequest = { isMenuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("카테고리 이름 변경") },
+                            onClick = {
+                                isMenuExpanded = false
+                                onRenameCategoryClick(category)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("카테고리 제거") },
+                            onClick = {
+                                isMenuExpanded = false
+                                onDeleteCategoryClick(category)
+                            },
                         )
                     }
                 }
