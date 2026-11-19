@@ -10,22 +10,6 @@ captures/
 # Local configuration (SDK path, etc.)
 local.properties
 
-# Spec Kit: local/session-only state, not shared across the team
-.specify/feature.json
-.specify/extensions/*/local-config.yml
-.specify/extensions/.cache/
-.specify/extensions/.backup/
-
-# IntelliJ / Android Studio project files, because
-# the project can be re-imported from settings.gradle.kts
-*.iml
-.idea/*
-# Keep the code styles.
-!/.idea/codeStyles
-/.idea/codeStyles/*
-!/.idea/codeStyles/Project.xml
-!/.idea/codeStyles/codeStyleConfig.xml
-
 # Packaging / profiling artifacts
 *.apk
 *.aab
@@ -34,18 +18,52 @@ local.properties
 output-metadata.json
 *.hprof
 
-# Logs
-*.log
-
-# Signing keys & service configs - never commit these
+# Signing keys, secrets & service configs - never commit these
 *.jks
 *.keystore
 google-services.json
 *.env
 *.env.*
+!.env.example
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
+# Editors / IDEs
+.vscode/
+*.swp
+*~
+# IntelliJ / Android Studio: re-importable from settings.gradle.kts, keep only code styles
+*.iml
+.idea/*
+!/.idea/codeStyles/
+/.idea/codeStyles/*
+!/.idea/codeStyles/Project.xml
+!/.idea/codeStyles/codeStyleConfig.xml
+
+# Logs / temp
+*.log
+*.tmp
+**/tmp/*
+**/temp/*
+!**/tmp/.keep
+!**/tmp/.gitkeep
+!**/temp/.keep
+!**/temp/.gitkeep
+
+# AI coding agents (personal, local-only files)
 .claude
+/.agents/
+CLAUDE.local.md
+/AGENTS.override.md
+# Spec Kit: everything is local except the constitution
+# (covers feature.json, extensions/*/local-config.yml, extensions/.cache|.backup)
+/.specify/*
+!/.specify/memory/
+/.specify/memory/*
+!/.specify/memory/constitution.md
+
+# Skill outputs (automatically archived)
+/.zenuml/
