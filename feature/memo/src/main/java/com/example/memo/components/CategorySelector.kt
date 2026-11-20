@@ -1,8 +1,7 @@
 package com.example.memo.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,13 +31,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.icon.SwemoIcons
 import com.example.designsystem.theme.SwemoTheme
 import com.example.model.Category
 import com.example.ui.DevicePreviews
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CategorySelector(
     categories: List<Category>,
@@ -45,7 +47,11 @@ internal fun CategorySelector(
     onCategorySelected: (Long) -> Unit,
     onRenameCategoryClick: (Category) -> Unit = {},
     onDeleteCategoryClick: (Category) -> Unit = {},
+    onCategoryPositionsChange: (List<Long>) -> Unit = {},
 ) {
+    val listState = rememberLazyListState()
+    val reorderState = rememberDragReorderState(listState, Category::id)
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -60,24 +66,37 @@ internal fun CategorySelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
+            state = listState,
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
             items(
-                items = categories,
+                items = reorderState.shown(categories),
                 key = { category -> category.id }
             ) { category ->
                 var isMenuExpanded by remember(category.id) { mutableStateOf(false) }
 
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .draggedItem(reorderState, category.id)
+                        .fillMaxWidth()
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
-                            .combinedClickable(
-                                onClick = { onCategorySelected(category.id) },
-                                onLongClickLabel = "카테고리 메뉴 열기",
-                                onLongClick = { isMenuExpanded = true },
-                                role = Role.Button,
+                            .clickable(role = Role.Button) { onCategorySelected(category.id) }
+                            .semantics {
+                                onLongClick(label = "카테고리 메뉴 열기") {
+                                    isMenuExpanded = true
+                                    true
+                                }
+                            }
+                            .dragToReorder(
+                                state = reorderState,
+                                key = category.id,
+                                items = categories,
+                                onLongPress = { isMenuExpanded = true },
+                                onReorder = { reordered -> onCategoryPositionsChange(reordered.map(Category::id)) },
                             )
                             .padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.Start,

@@ -71,6 +71,7 @@ fun MemoScreen(
         // events - crud
         /* Category - C */ onAddCategoryClick = viewModel::addCategory,
         /* Category - U */ onRenameCategoryClick = viewModel::renameCategory,
+        /* Category - U */ onCategoryPositionsChange = viewModel::updateCategoryPositions,
         /* Category - D */ onDeleteCategoryClick = viewModel::deleteCategory,
         /* Memo - C */ onAddMemoClick = viewModel::addMemo,
         /* Memo - U */ onEditMemoClick = viewModel::updateMemo,
@@ -96,6 +97,7 @@ private fun MemoScreen(
     // events - crud
     /* Category - C */ onAddCategoryClick: (String) -> Unit,
     /* Category - U */ onRenameCategoryClick: (Long, String) -> Unit,
+    /* Category - U */ onCategoryPositionsChange: (List<Long>) -> Unit,
     /* Category - D */ onDeleteCategoryClick: (Long) -> Unit,
     /* Memo - C */ onAddMemoClick: (Long) -> Unit,
     /* Memo - U */ onEditMemoClick: () -> Unit,
@@ -136,6 +138,7 @@ private fun MemoScreen(
                         MemoScreenDialog.CategoryDelete(category.id, category.name)
                     )
                 },
+                onCategoryPositionsChange = onCategoryPositionsChange,
             )
         }
     ) {
@@ -369,6 +372,7 @@ fun MemoScreenPreview_Default(
             editorTextState = remember { bulletedListTextFieldState() },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
+            onCategoryPositionsChange = {},
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
@@ -414,6 +418,7 @@ fun MemoScreenPreview_MemoEditorVisible(
             editorTextState = remember { bulletedListTextFieldState("label 3: Fake memo 7\nlabel 5: Fake memo 7\nlabel 7: Fake memo 7") },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
+            onCategoryPositionsChange = {},
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
@@ -447,6 +452,7 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             editorTextState = remember { bulletedListTextFieldState() },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
+            onCategoryPositionsChange = {},
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
