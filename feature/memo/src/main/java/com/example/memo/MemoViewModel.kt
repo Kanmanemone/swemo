@@ -131,6 +131,12 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         }
     }
 
+    fun updateCategoryPositions(categoryIdsInOrder: List<Long>) {
+        viewModelScope.launch {
+            repository.updateCategoryPositions(categoryIdsInOrder)
+        }
+    }
+
     // Category - D
     fun deleteCategory(categoryId: Long) {
         viewModelScope.launch {
@@ -157,6 +163,12 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         viewModelScope.launch {
             repository.updateMemo(memo.copy(contents = editorTextState.text.toMemoContents()))
             resetEditor()
+        }
+    }
+
+    fun updateMemoPositions(memoIdsInOrder: List<Long>) {
+        viewModelScope.launch {
+            repository.updateMemoPositions(memoIdsInOrder)
         }
     }
 
