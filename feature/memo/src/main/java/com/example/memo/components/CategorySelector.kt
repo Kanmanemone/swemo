@@ -89,24 +89,33 @@ internal fun CategorySelector(
                         )
                     }
 
-                    DropdownMenu(
-                        expanded = isMenuExpanded,
-                        onDismissRequest = { isMenuExpanded = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("카테고리 이름 변경") },
-                            onClick = {
-                                isMenuExpanded = false
-                                onRenameCategoryClick(category)
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("카테고리 제거") },
-                            onClick = {
-                                isMenuExpanded = false
-                                onDeleteCategoryClick(category)
-                            },
-                        )
+                    Box(modifier = Modifier.matchParentSize()) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .fillMaxHeight()
+                                .width(0.dp),
+                        ) {
+                            DropdownMenu(
+                                expanded = isMenuExpanded,
+                                onDismissRequest = { isMenuExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("카테고리 이름 변경") },
+                                    onClick = {
+                                        isMenuExpanded = false
+                                        onRenameCategoryClick(category)
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("카테고리 제거") },
+                                    onClick = {
+                                        isMenuExpanded = false
+                                        onDeleteCategoryClick(category)
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
             }
