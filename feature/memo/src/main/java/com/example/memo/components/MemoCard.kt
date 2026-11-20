@@ -40,21 +40,27 @@ internal fun MemoCard(
 
     Box(modifier = modifier.fillMaxWidth()) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClickLabel = "메모 메뉴 열기",
-                    onLongClick = { isMenuExpanded = true },
-                    role = Role.Button,
-                ),
+            modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                BulletedListTextField(
-                    state = state,
-                    enabled = false, // 탭·길게 누르기를 카드가 받게 한다. 글자색은 textStyle로 직접 주므로 흐려지지 않는다
-                    textStyle = bulletedListTextStyle(),
+            Box(modifier = modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    BulletedListTextField(
+                        state = state,
+                        enabled = false, // 편집 막기. 글자색은 textStyle로 직접 주므로 흐려지지 않는다
+                        textStyle = bulletedListTextStyle(),
+                    )
+                }
+                // disabled여도 TextField가 터치를 소비하므로, 그 위에 덮은 레이어가 탭·길게 누르기를 먼저 받는다
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .combinedClickable(
+                            onClick = onClick,
+                            onLongClickLabel = "메모 메뉴 열기",
+                            onLongClick = { isMenuExpanded = true },
+                            role = Role.Button,
+                        ),
                 )
             }
         }
