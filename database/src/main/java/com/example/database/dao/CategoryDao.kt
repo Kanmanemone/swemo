@@ -9,17 +9,34 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
-    @Query("SELECT * FROM categories ORDER BY id")
+    @Query("SELECT * FROM categories ORDER BY position, id")
     fun getCategories(): Flow<List<CategoryEntity>>
 
     @Query("SELECT * FROM categories WHERE id = :categoryId")
     suspend fun getCategory(categoryId: Long): CategoryEntity?
 
+    @Transaction
+    suspend fun insertCategory(category: CategoryEntity): Long =
+        insertCategoryInternal(category.copy(position = getNextCategoryPosition()))
+
     @Insert
-    suspend fun insertCategory(category: CategoryEntity): Long
+    suspend fun insertCategoryInternal(category: CategoryEntity): Long
+
+    @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM categories")
+    suspend fun getNextCategoryPosition(): Int
 
     @Query("UPDATE categories SET name = :name WHERE id = :categoryId")
     suspend fun updateCategoryName(categoryId: Long, name: String)
+
+    @Transaction
+    suspend fun updateCategoryPositions(categoryIdsInOrder: List<Long>) {
+        categoryIdsInOrder.forEachIndexed { position, categoryId ->
+            updateCategoryPosition(categoryId, position)
+        }
+    }
+
+    @Query("UPDATE categories SET position = :position WHERE id = :categoryId")
+    suspend fun updateCategoryPosition(categoryId: Long, position: Int)
 
     @Transaction
     suspend fun deleteCategory(categoryId: Long): Long? {

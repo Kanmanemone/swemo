@@ -49,8 +49,16 @@ class MemoRepositoryImpl @Inject constructor(
         categoryDao.updateCategoryName(categoryId, name)
     }
 
+    override suspend fun updateCategoryPositions(categoryIdsInOrder: List<Long>) {
+        categoryDao.updateCategoryPositions(categoryIdsInOrder)
+    }
+
     override suspend fun updateMemo(memo: Memo) {
         memoDao.updatePopulatedMemo(memo)
+    }
+
+    override suspend fun updateMemoPositions(memoIdsInOrder: List<Long>) {
+        memoDao.updateMemoPositions(memoIdsInOrder)
     }
 
     override suspend fun deleteCategory(categoryId: Long): Long? {

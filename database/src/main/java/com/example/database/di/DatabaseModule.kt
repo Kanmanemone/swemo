@@ -3,6 +3,7 @@ package com.example.database.di
 import android.content.Context
 import androidx.room.Room
 import com.example.database.SwemoDatabase
+import com.example.database.MIGRATION_1_2
 import com.example.database.dao.CategoryDao
 import com.example.database.dao.MemoDao
 import dagger.Module
@@ -24,7 +25,7 @@ internal object DatabaseModule {
         context,
         SwemoDatabase::class.java,
         "swemo-database"
-    ).build()
+    ).addMigrations(MIGRATION_1_2).build()
 
     @Provides
     fun provideCategoryDao(
