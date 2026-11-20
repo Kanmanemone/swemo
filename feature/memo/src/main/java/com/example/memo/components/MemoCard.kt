@@ -1,7 +1,6 @@
 package com.example.memo.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -15,38 +14,40 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
 import com.example.model.Memo
 import com.example.model.MemoContent
 import com.example.ui.DevicePreviews
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun MemoCard(
     memo: Memo,
     modifier: Modifier = Modifier,
+    // 탭·길게 누르기를 받는 레이어에 붙일 제스처. 드래그 재정렬처럼 MemoFeed가 정한다
+    gestureModifier: Modifier = Modifier,
+    isMenuExpanded: Boolean = false,
     onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
+    onMenuDismiss: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
 ) {
     // TextFieldState는 생성 후 memo.contents가 바뀌어도 텍스트를 자동으로 갱신하지 않는다.
     // MemoFeed가 같은 id의 카드를 재사용하므로, 내용이 바뀌면 상태를 다시 만들어 최신 내용을 표시한다.
     val state = remember(memo.contents) { bulletedListTextFieldState(memo.contents.toBulletedListText()) }
-    var isMenuExpanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxWidth()) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         ) {
-            Box(modifier = modifier.fillMaxWidth()) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     BulletedListTextField(
                         state = state,
@@ -58,12 +59,14 @@ internal fun MemoCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .combinedClickable(
-                            onClick = onClick,
-                            onLongClickLabel = "메모 메뉴 열기",
-                            onLongClick = { isMenuExpanded = true },
-                            role = Role.Button,
-                        ),
+                        .clickable(role = Role.Button, onClick = onClick)
+                        .semantics {
+                            onLongClick(label = "메모 메뉴 열기") {
+                                onLongClick()
+                                true
+                            }
+                        }
+                        .then(gestureModifier),
                 )
             }
         }
@@ -77,12 +80,12 @@ internal fun MemoCard(
             ) {
                 DropdownMenu(
                     expanded = isMenuExpanded,
-                    onDismissRequest = { isMenuExpanded = false },
+                    onDismissRequest = onMenuDismiss,
                 ) {
                     DropdownMenuItem(
                         text = { Text("메모 제거") },
                         onClick = {
-                            isMenuExpanded = false
+                            onMenuDismiss()
                             onDeleteClick()
                         },
                     )

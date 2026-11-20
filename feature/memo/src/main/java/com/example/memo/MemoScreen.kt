@@ -74,6 +74,7 @@ fun MemoScreen(
         /* Category - D */ onDeleteCategoryClick = viewModel::deleteCategory,
         /* Memo - C */ onAddMemoClick = viewModel::addMemo,
         /* Memo - U */ onEditMemoClick = viewModel::updateMemo,
+        /* Memo - U */ onMemoPositionsChange = viewModel::updateMemoPositions,
         /* Memo - D */ onDeleteMemoClick = viewModel::deleteMemo,
         // event - etc
         onDialogRequested = { dialogState = it },
@@ -98,6 +99,7 @@ private fun MemoScreen(
     /* Category - D */ onDeleteCategoryClick: (Long) -> Unit,
     /* Memo - C */ onAddMemoClick: (Long) -> Unit,
     /* Memo - U */ onEditMemoClick: () -> Unit,
+    /* Memo - U */ onMemoPositionsChange: (List<Long>) -> Unit,
     /* Memo - D */ onDeleteMemoClick: (Long) -> Unit,
     // event - etc
     onDialogRequested: (MemoScreenDialog?) -> Unit,
@@ -233,6 +235,7 @@ private fun MemoScreen(
                         .padding(paddingValues),
                     onMemoClick = onMemoClick,
                     onMemoDeleteClick = onDeleteMemoClick,
+                    onMemoPositionsChange = onMemoPositionsChange,
                 )
             }
         }
@@ -369,6 +372,7 @@ fun MemoScreenPreview_Default(
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
             onCategorySelected = {},
@@ -413,6 +417,7 @@ fun MemoScreenPreview_MemoEditorVisible(
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
             onCategorySelected = {},
@@ -445,6 +450,7 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
             onCategorySelected = {},
