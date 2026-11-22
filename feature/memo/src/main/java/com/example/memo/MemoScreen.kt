@@ -71,9 +71,11 @@ fun MemoScreen(
         // events - crud
         /* Category - C */ onAddCategoryClick = viewModel::addCategory,
         /* Category - U */ onRenameCategoryClick = viewModel::renameCategory,
+        /* Category - U */ onCategoryPositionsChange = viewModel::updateCategoryPositions,
         /* Category - D */ onDeleteCategoryClick = viewModel::deleteCategory,
         /* Memo - C */ onAddMemoClick = viewModel::addMemo,
         /* Memo - U */ onEditMemoClick = viewModel::updateMemo,
+        /* Memo - U */ onMemoPositionsChange = viewModel::updateMemoPositions,
         /* Memo - D */ onDeleteMemoClick = viewModel::deleteMemo,
         // event - etc
         onDialogRequested = { dialogState = it },
@@ -95,9 +97,11 @@ private fun MemoScreen(
     // events - crud
     /* Category - C */ onAddCategoryClick: (String) -> Unit,
     /* Category - U */ onRenameCategoryClick: (Long, String) -> Unit,
+    /* Category - U */ onCategoryPositionsChange: (List<Long>) -> Unit,
     /* Category - D */ onDeleteCategoryClick: (Long) -> Unit,
     /* Memo - C */ onAddMemoClick: (Long) -> Unit,
     /* Memo - U */ onEditMemoClick: () -> Unit,
+    /* Memo - U */ onMemoPositionsChange: (List<Long>) -> Unit,
     /* Memo - D */ onDeleteMemoClick: (Long) -> Unit,
     // event - etc
     onDialogRequested: (MemoScreenDialog?) -> Unit,
@@ -134,6 +138,7 @@ private fun MemoScreen(
                         MemoScreenDialog.CategoryDelete(category.id, category.name)
                     )
                 },
+                onCategoryPositionsChange = onCategoryPositionsChange,
             )
         }
     ) {
@@ -233,6 +238,7 @@ private fun MemoScreen(
                         .padding(paddingValues),
                     onMemoClick = onMemoClick,
                     onMemoDeleteClick = onDeleteMemoClick,
+                    onMemoPositionsChange = onMemoPositionsChange,
                 )
             }
         }
@@ -366,9 +372,11 @@ fun MemoScreenPreview_Default(
             editorTextState = remember { bulletedListTextFieldState() },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
+            onCategoryPositionsChange = {},
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
             onCategorySelected = {},
@@ -410,9 +418,11 @@ fun MemoScreenPreview_MemoEditorVisible(
             editorTextState = remember { bulletedListTextFieldState("label 3: Fake memo 7\nlabel 5: Fake memo 7\nlabel 7: Fake memo 7") },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
+            onCategoryPositionsChange = {},
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
             onCategorySelected = {},
@@ -442,9 +452,11 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             editorTextState = remember { bulletedListTextFieldState() },
             onAddCategoryClick = {},
             onRenameCategoryClick = { _, _ -> },
+            onCategoryPositionsChange = {},
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
             onCategorySelected = {},

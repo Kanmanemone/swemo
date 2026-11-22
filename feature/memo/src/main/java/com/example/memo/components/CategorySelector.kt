@@ -1,8 +1,7 @@
 package com.example.memo.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -37,7 +37,7 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.model.Category
 import com.example.ui.DevicePreviews
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CategorySelector(
     categories: List<Category>,
@@ -45,7 +45,13 @@ internal fun CategorySelector(
     onCategorySelected: (Long) -> Unit,
     onRenameCategoryClick: (Category) -> Unit = {},
     onDeleteCategoryClick: (Category) -> Unit = {},
+    onCategoryPositionsChange: (List<Long>) -> Unit = {},
 ) {
+    val listState = rememberLazyListState()
+    val dragState = remember { ReorderableState() }
+    // 저장된 순서가 Flow로 돌아올 때까지 드래그한 순서를 유지한다
+    var categoriesInOrder by remember(categories) { mutableStateOf(categories) }
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -60,24 +66,33 @@ internal fun CategorySelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
+            state = listState,
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
             items(
-                items = categories,
+                items = categoriesInOrder,
                 key = { category -> category.id }
             ) { category ->
                 var isMenuExpanded by remember(category.id) { mutableStateOf(false) }
 
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .draggedItem(dragState, category.id, listState),
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
-                            .combinedClickable(
-                                onClick = { onCategorySelected(category.id) },
-                                onLongClickLabel = "카테고리 메뉴 열기",
-                                onLongClick = { isMenuExpanded = true },
-                                role = Role.Button,
+                            .clickable(role = Role.Button) { onCategorySelected(category.id) }
+                            .longPressReorderable(
+                                key = category.id,
+                                dragState = dragState,
+                                listState = listState,
+                                onMove = { from, to -> categoriesInOrder = categoriesInOrder.moved(from, to) },
+                                onDragEnd = { onCategoryPositionsChange(categoriesInOrder.map(Category::id)) },
+                                onLongPress = { isMenuExpanded = true },
+                                onDragAway = { isMenuExpanded = false },
                             )
                             .padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.Start,
