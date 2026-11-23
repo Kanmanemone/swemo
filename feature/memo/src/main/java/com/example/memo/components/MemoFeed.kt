@@ -3,8 +3,7 @@ package com.example.memo.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -47,11 +46,11 @@ internal fun MemoFeed(
         ) { memo ->
             var isMenuExpanded by remember { mutableStateOf(false) }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
             Box(
+                // 간격을 항목에 포함해야 자리 이동 애니메이션이 카드와 함께 움직인다 (reverseLayout이라 아래쪽)
                 modifier = Modifier
-                    .draggedItem(dragState, memo.id, listState)
+                    .draggedItem(this, dragState, memo.id, listState)
+                    .padding(bottom = 4.dp),
             ) {
                 MemoCard(
                     memo = memo,

@@ -1,6 +1,7 @@
 package com.example.memo.components
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
@@ -78,14 +79,24 @@ internal class ReorderableState {
     }
 }
 
-/** 끌리는 항목을 손가락 위치로 옮겨 그린다. 레이아웃 자리는 그대로 두므로 드래그 중 목록이 재배치되지 않는다. */
-internal fun Modifier.draggedItem(dragState: ReorderableState, key: Any, listState: LazyListState): Modifier =
-    // 이웃 카드 밑으로 가려지지 않게 위에 그린다
-    zIndex(if (dragState.key == key) 1f else 0f)
+/** 끌리는 항목은 손가락 위치로 옮겨 그리고(레이아웃 자리는 그대로), 나머지 항목은 자리가 바뀔 때 애니메이션으로 옮긴다. */
+internal fun Modifier.draggedItem(itemScope: LazyItemScope, dragState: ReorderableState, key: Any, listState: LazyListState): Modifier {
+    val base: Modifier = if (dragState.key == key) {
+        this // 끌리는 항목: 손가락을 따라가야 하니 애니메이션 없음
+    } else {
+        with(itemScope) {
+            // 나머지: 자리 이동 애니메이션. fade는 꺼서 추가·삭제 동작을 유지한다
+            this@draggedItem.animateItem(fadeInSpec = null, fadeOutSpec = null)
+        }
+    }
+    return base
+        // 이웃 카드 밑으로 가려지지 않게 위에 그린다
+        .zIndex(if (dragState.key == key) 1f else 0f)
         .graphicsLayer {
             val direction = if (listState.layoutInfo.reverseLayout) -1f else 1f
             translationY = if (dragState.key == key) dragState.dragOffset(listState) * direction else 0f
         }
+}
 
 /**
  * 길게 누르면 [onLongPress](메뉴 열기)와 함께 드래그가 시작돼 순서가 바뀐다.

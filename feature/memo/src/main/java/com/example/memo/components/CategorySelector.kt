@@ -78,7 +78,7 @@ internal fun CategorySelector(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .draggedItem(dragState, category.id, listState),
+                        .draggedItem(this, dragState, category.id, listState),
                 ) {
                     Row(
                         modifier = Modifier
