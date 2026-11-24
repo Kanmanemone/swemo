@@ -1,7 +1,6 @@
 package com.example.memo.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.icon.SwemoIcons
 import com.example.designsystem.theme.SwemoTheme
@@ -84,8 +82,7 @@ internal fun CategorySelector(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
-                            .clickable(role = Role.Button) { onCategorySelected(category.id) }
-                            .longPressReorderable(
+                            .reorderableClickable(
                                 key = category.id,
                                 dragState = dragState,
                                 listState = listState,
@@ -93,6 +90,7 @@ internal fun CategorySelector(
                                 onDragEnd = { onCategoryPositionsChange(categoriesInOrder.map(Category::id)) },
                                 onLongPress = { isMenuExpanded = true },
                                 onDragAway = { isMenuExpanded = false },
+                                onClick = { onCategorySelected(category.id) },
                             )
                             .padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.Start,

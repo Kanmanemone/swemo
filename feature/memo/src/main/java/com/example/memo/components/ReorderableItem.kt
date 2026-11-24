@@ -1,20 +1,28 @@
 package com.example.memo.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.flow.Flow
 import kotlin.math.abs
 
 /** LazyColumn 하나에서 지금 끌고 있는 항목과 그 이동량. 오프셋은 LazyListItemInfo와 같은 논리 좌표(reverseLayout이면 아래가 시작)다. */
@@ -104,11 +112,12 @@ internal fun Modifier.draggedItem(itemScope: LazyItemScope, dragState: Reorderab
 }
 
 /**
- * 길게 누르면 [onLongPress](메뉴 열기)와 함께 드래그가 시작돼 순서가 바뀐다.
+ * 탭하면 [onClick]을 부르고, 길게 누르면 [onLongPress](메뉴 열기)와 함께 드래그가 시작돼 순서가 바뀐다.
+ * 드래그하는 동안에도 처음 눌렀을 때의 ripple이 유지된다.
  * [MenuDismissDistance]보다 멀리 끌면 [onDragAway]로 메뉴를 닫고, 순서가 바뀐 채 손을 떼면 [onDragEnd]를 부른다.
  */
 @Composable
-internal fun Modifier.longPressReorderable(
+internal fun Modifier.reorderableClickable(
     key: Any,
     dragState: ReorderableState,
     listState: LazyListState,
@@ -116,6 +125,7 @@ internal fun Modifier.longPressReorderable(
     onDragEnd: () -> Unit,
     onLongPress: () -> Unit,
     onDragAway: () -> Unit,
+    onClick: () -> Unit,
 ): Modifier {
     // pointerInput(key)은 재시작하지 않으므로 처음 받은 람다가 옛 목록을 쥐고 있게 된다. 람다를 key로 넣으면 드래그가 끊긴다
     val currentOnMove by rememberUpdatedState(onMove)
@@ -123,21 +133,83 @@ internal fun Modifier.longPressReorderable(
     val currentOnLongPress by rememberUpdatedState(onLongPress)
     val currentOnDragAway by rememberUpdatedState(onDragAway)
 
-    return pointerInput(key) {
-        detectDragGesturesAfterLongPress(
-            onDragStart = {
-                dragState.start(key, listState)
-                currentOnLongPress()
-            },
-            onDrag = { change, amount ->
-                // 목록 스크롤이 같은 움직임을 가져가지 못하게 한다
-                change.consume()
-                val direction = if (listState.layoutInfo.reverseLayout) -1f else 1f
-                if (dragState.drag(amount.y * direction, MenuDismissDistance.toPx(), listState, currentOnMove)) currentOnDragAway()
-            },
-            onDragEnd = { if (dragState.stop()) currentOnDragEnd() },
-            onDragCancel = { if (dragState.stop()) currentOnDragEnd() },
+    val interactionSource = remember { DragPressInteractionSource() }
+
+    return this
+        .clickable(
+            onClick = onClick,
+            interactionSource = interactionSource,
+            indication = ripple(),
+            role = Role.Button,
         )
+        .pointerInput(key) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = {
+                    interactionSource.hold()
+                    dragState.start(key, listState)
+                    currentOnLongPress()
+                },
+                onDrag = { change, amount ->
+                    // 목록 스크롤이 같은 움직임을 가져가지 못하게 한다
+                    change.consume()
+                    val direction = if (listState.layoutInfo.reverseLayout) -1f else 1f
+                    val crossedDismissDistance = dragState.drag(
+                        delta = amount.y * direction,
+                        dragDistance = MenuDismissDistance.toPx(),
+                        listState = listState,
+                        onMove = currentOnMove,
+                    )
+                    if (crossedDismissDistance) currentOnDragAway()
+                },
+                onDragEnd = {
+                    interactionSource.release()
+                    if (dragState.stop()) currentOnDragEnd()
+                },
+                onDragCancel = {
+                    interactionSource.release()
+                    if (dragState.stop()) currentOnDragEnd()
+                },
+            )
+        }
+}
+
+/**
+ * 드래그하는 동안 처음 눌림의 ripple을 유지하는 [MutableInteractionSource].
+ *
+ * 드래그가 터치를 consume하면 clickable이 눌림을 Cancel해 ripple이 꺼진다.
+ * [hold]를 부른 뒤부터 [release]를 부르기 전까지 오는 Cancel은 넘기지 않고 보관했다가, [release]에서 Release로 바꿔 넘긴다.
+ */
+internal class DragPressInteractionSource(
+    private val delegate: MutableInteractionSource = MutableInteractionSource(),
+) : MutableInteractionSource {
+
+    override val interactions: Flow<Interaction>
+        get() = delegate.interactions
+
+    private var isHolding = false
+    private var pressInteraction: PressInteraction.Press? = null
+
+    fun hold() {
+        isHolding = true
+    }
+
+    fun release() {
+        isHolding = false
+        pressInteraction?.let { delegate.tryEmit(PressInteraction.Release(it)) }
+        pressInteraction = null
+    }
+
+    override suspend fun emit(interaction: Interaction) {
+        if (!tryHoldCancel(interaction)) delegate.emit(interaction)
+    }
+
+    override fun tryEmit(interaction: Interaction): Boolean =
+        tryHoldCancel(interaction) || delegate.tryEmit(interaction)
+
+    private fun tryHoldCancel(interaction: Interaction): Boolean {
+        if (!isHolding || interaction !is PressInteraction.Cancel) return false
+        pressInteraction = interaction.press
+        return true
     }
 }
 
@@ -145,7 +217,10 @@ internal fun Modifier.longPressReorderable(
 private val MenuDismissDistance = 24.dp
 
 /** 끌린 항목 중심이 넘어선 가장 먼 항목. 중간선 기준이라 크기가 다른 항목과 바꾼 직후 흔들림에 되돌아가지 않는다. */
-internal fun List<LazyListItemInfo>.findTargetItem(draggingItem: LazyListItemInfo, center: Float): LazyListItemInfo? =
+internal fun List<LazyListItemInfo>.findTargetItem(
+    draggingItem: LazyListItemInfo,
+    center: Float
+): LazyListItemInfo? =
     lastOrNull { it.index > draggingItem.index && center > it.offset + it.size / 2f }
         ?: firstOrNull { it.index < draggingItem.index && center < it.offset + it.size / 2f }
 

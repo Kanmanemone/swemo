@@ -1,6 +1,5 @@
 package com.example.memo.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -14,7 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
@@ -68,8 +67,8 @@ internal fun MemoFeed(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .clickable(role = Role.Button) { onMemoClick(memo) }
-                        .longPressReorderable(
+                        .clip(MemoCardShape)
+                        .reorderableClickable(
                             key = memo.id,
                             dragState = dragState,
                             listState = listState,
@@ -77,6 +76,7 @@ internal fun MemoFeed(
                             onDragEnd = { onMemoPositionsChange(itemsInListOrder.asReversed().map(Memo::id)) },
                             onLongPress = { isMenuExpanded = true },
                             onDragAway = { isMenuExpanded = false },
+                            onClick = { onMemoClick(memo) },
                         ),
                 )
             }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
 import com.example.model.Memo
@@ -25,6 +26,10 @@ import com.example.ui.DevicePreviews
  * 메모 내용과 메뉴만 그린다. 탭·길게 누르기는 받지 않는다.
  * 내용을 그리는 TextField가 disabled여도 터치를 소비하므로, 터치는 호출부가 이 카드 위에 덮은 레이어로 받는다.
  */
+/** 카드 모양. 카드 위에 덮는 터치 레이어도 같은 모양으로 잘라야 하므로 한 곳에서 정한다 */
+internal val MemoCardShape: Shape
+    @Composable get() = CardDefaults.shape
+
 @Composable
 internal fun MemoCard(
     memo: Memo,
@@ -40,6 +45,7 @@ internal fun MemoCard(
     Box(modifier = modifier.fillMaxWidth()) {
         Card(
             modifier = Modifier.fillMaxWidth(),
+            shape = MemoCardShape,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         ) {
             BulletedListTextField(
