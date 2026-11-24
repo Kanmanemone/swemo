@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -28,11 +29,15 @@ internal fun MemoFeed(
     onMemoClick: (Memo) -> Unit = {},
     onMemoDeleteClick: (Long) -> Unit = {},
     onMemoPositionsChange: (List<Long>) -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
 ) {
-    val listState = rememberLazyListState()
     val dragState = remember { ReorderableState() }
     // 드래그 중에는 화면 순서를 여기서 바꾸고, 손을 뗄 때만 저장한다
-    var itemsInListOrder by remember(memos) { mutableStateOf(memos.asReversed()) }
+    var itemsInListOrder by remember(memos) {
+        // 맨 아래에 있었다면 key 기준 위치 유지 대신 맨 아래를 보여줘 새 메모가 보이게 한다. 스크롤해 둔 상태면 그대로 둔다
+        if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0) listState.requestScrollToItem(0)
+        mutableStateOf(memos.asReversed())
+    }
 
     LazyColumn(
         modifier = modifier,

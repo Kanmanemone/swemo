@@ -63,6 +63,11 @@ internal class ReorderableState {
         onMove(draggingItem.index, targetItem.index)
         hasMoved = true // 사용자가 손을 떼어 드래그가 끝날 때 DB 작업을 해야되는지 판단하는 용도
         pendingMoveIndex = targetItem.index // 'onMove() 발생' ~ '화면에 반영됨' 사이에 reorder() 함수 실행 막는 용도 (위에 있는 when문)
+
+        // LazyColumn은 보유한 items에 변화가 생겨도, 변화 전 화면에 보이던 첫 번째 항목이 그 자리에 그대로 있게끔 스크롤을 조작하는 기본 동작이 있다. 따라서 이 기본 동작 대신 내가 커스텀한 위치로 스크롤이 이동되게 예약한다.
+        if (draggingItem.index == listState.firstVisibleItemIndex || targetItem.index == listState.firstVisibleItemIndex) {
+            listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
+        }
     }
 
     /** 끌던 항목을 그릴 때 레이아웃 자리에서 옮길 거리. 그 프레임의 실제 자리를 읽어 빼므로 화면에서는 늘 손가락 아래에 있다 */
