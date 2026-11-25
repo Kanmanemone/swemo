@@ -51,8 +51,25 @@ internal class ReorderableState {
         dragDelta += delta
         val crossed = !menuDismissed && abs(dragDelta) > dragDistance
         if (crossed) menuDismissed = true
+        // 스크롤을 먼저 한다: reorder()의 requestScrollToItem보다 늦게 스크롤되면 그 요청을 덮어써 한 프레임 튄다
+        scrollIfOverEdge(listState)
         reorder(listState, onMove)
         return crossed
+    }
+
+    /** 끌린 항목이 가장자리를 넘은 만큼 바로 스크롤한다. 손가락이 움직일 때만 불리므로 가만히 대고 있으면 멈춘다(공식 [LazyColumnDragAndDropDemo](https://github.com/androidx/androidx/blob/androidx-main/compose/foundation/foundation/integration-tests/foundation-demos/src/main/java/androidx/compose/foundation/demos/LazyColumnDragAndDropDemo.kt)와 같음). */
+    private fun scrollIfOverEdge(listState: LazyListState) {
+        val layoutInfo = listState.layoutInfo
+        val draggingItem = layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return
+        val start = startOffset + dragDelta
+        val end = start + draggingItem.size
+        val overscroll = when {
+            dragDelta > 0 -> (end - layoutInfo.viewportEndOffset).coerceAtLeast(0f)
+            dragDelta < 0 -> (start - layoutInfo.viewportStartOffset).coerceAtMost(0f)
+            else -> 0f
+        }
+        // 공식 데모의 scrollBy(코루틴)와 달리 즉시 적용돼, 바로 뒤 reorder()가 스크롤된 배치를 읽는다
+        if (overscroll != 0f) listState.dispatchRawDelta(overscroll)
     }
 
     /** 끌린 항목의 중심(손가락 위치 기준)이 이웃의 중간선을 넘으면 [onMove]로 알린다. */
