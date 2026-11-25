@@ -20,6 +20,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -50,102 +51,102 @@ internal fun CategorySelector(
     // 저장된 순서가 Flow로 돌아올 때까지 드래그한 순서를 유지한다
     var categoriesInOrder by remember(categories) { mutableStateOf(categories) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxHeight()
-            .width(250.dp)
-            .background(color = MaterialTheme.colorScheme.surface),
-    ) {
-        TopAppBar(
-            title = { Text("Category") }
-        )
-
-        LazyColumn(
+    Surface {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            state = listState,
-            contentPadding = PaddingValues(vertical = 8.dp),
+                .fillMaxHeight()
+                .width(250.dp)
         ) {
-            items(
-                items = categoriesInOrder,
-                key = { category -> category.id }
-            ) { category ->
-                var isMenuExpanded by remember(category.id) { mutableStateOf(false) }
+            TopAppBar(
+                title = { Text("Category") }
+            )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .draggedItem(this, dragState, category.id, listState),
-                ) {
-                    Row(
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                state = listState,
+                contentPadding = PaddingValues(vertical = 8.dp),
+            ) {
+                items(
+                    items = categoriesInOrder,
+                    key = { category -> category.id }
+                ) { category ->
+                    var isMenuExpanded by remember(category.id) { mutableStateOf(false) }
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .reorderableClickable(
-                                key = category.id,
-                                dragState = dragState,
-                                listState = listState,
-                                onMove = { from, to -> categoriesInOrder = categoriesInOrder.moved(from, to) },
-                                onDragEnd = { onCategoryPositionsChange(categoriesInOrder.map(Category::id)) },
-                                onLongPress = { isMenuExpanded = true },
-                                onDragAway = { isMenuExpanded = false },
-                                onClick = { onCategorySelected(category.id) },
-                            )
-                            .padding(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically,
+                            .draggedItem(this, dragState, category.id, listState)
+                            // 끌리는 항목이 지나갈 때 아래 항목 글씨가 비쳐 겹치지 않게 불투명 배경을 깐다
+                            .background(MaterialTheme.colorScheme.surface),
                     ) {
-                        Text(
-                            text = category.name,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-
-                    Box(modifier = Modifier.matchParentSize()) {
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .fillMaxHeight()
-                                .width(0.dp),
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .reorderableClickable(
+                                    key = category.id,
+                                    dragState = dragState,
+                                    listState = listState,
+                                    onMove = { from, to -> categoriesInOrder = categoriesInOrder.moved(from, to) },
+                                    onDragEnd = { onCategoryPositionsChange(categoriesInOrder.map(Category::id)) },
+                                    onLongPress = { isMenuExpanded = true },
+                                    onDragAway = { isMenuExpanded = false },
+                                    onClick = { onCategorySelected(category.id) },
+                                )
+                                .padding(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            DropdownMenu(
-                                expanded = isMenuExpanded,
-                                onDismissRequest = { isMenuExpanded = false },
+                            Text(text = category.name)
+                        }
+
+                        Box(modifier = Modifier.matchParentSize()) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .fillMaxHeight()
+                                    .width(0.dp),
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("카테고리 이름 변경") },
-                                    onClick = {
-                                        isMenuExpanded = false
-                                        onRenameCategoryClick(category)
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("카테고리 제거") },
-                                    onClick = {
-                                        isMenuExpanded = false
-                                        onDeleteCategoryClick(category)
-                                    },
-                                )
+                                DropdownMenu(
+                                    expanded = isMenuExpanded,
+                                    onDismissRequest = { isMenuExpanded = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("카테고리 이름 변경") },
+                                        onClick = {
+                                            isMenuExpanded = false
+                                            onRenameCategoryClick(category)
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("카테고리 제거") },
+                                        onClick = {
+                                            isMenuExpanded = false
+                                            onDeleteCategoryClick(category)
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        Button(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(16.dp),
-            onClick = {
-                onAddCategoryButtonClick()
+            Button(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(16.dp),
+                onClick = {
+                    onAddCategoryButtonClick()
+                }
+            ) {
+                Icon(
+                    imageVector = SwemoIcons.Add,
+                    contentDescription = null
+                )
             }
-        ) {
-            Icon(
-                imageVector = SwemoIcons.Add,
-                contentDescription = null
-            )
         }
     }
 }
