@@ -10,7 +10,6 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalNavigationDrawer
@@ -81,7 +80,6 @@ fun MemoScreen(
         onDialogRequested = { dialogState = it },
         onCategorySelected = viewModel::selectCategory,
         onMemoClick = viewModel::copyMemoToEditor,
-        onMemoEditorToggleButtonClick = viewModel::toggleEditorVisibility,
         onClearAllClick = viewModel::clearEditor,
     )
 }
@@ -107,7 +105,6 @@ private fun MemoScreen(
     onDialogRequested: (MemoScreenDialog?) -> Unit,
     onCategorySelected: (Long) -> Unit,
     onMemoClick: (Memo) -> Unit,
-    onMemoEditorToggleButtonClick: () -> Unit,
     onClearAllClick: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -201,35 +198,20 @@ private fun MemoScreen(
                     )
                 },
                 bottomBar = {
-                    if (editorState.isVisible) {
-                        Surface(
-                            tonalElevation = 4.dp
-                        ) {
-                            MemoEditor(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                editTarget = editTarget,
-                                textState = editorTextState,
-                                mode = editorState.mode,
-                                onAddMemoClick = { onAddMemoClick(selectedCategory.id) },
-                                onEditMemoClick = onEditMemoClick,
-                                onClearAllClick = onClearAllClick,
-                            )
-                        }
-                    }
-                },
-                floatingActionButton = {
-                    Button(
-                        onClick = onMemoEditorToggleButtonClick
-                    ) {
-                        Icon(
-                            imageVector = SwemoIcons.AddNotes,
-                            contentDescription = null
+                    Surface {
+                        MemoEditor(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            editTarget = editTarget,
+                            textState = editorTextState,
+                            mode = editorState.mode,
+                            onAddMemoClick = { onAddMemoClick(selectedCategory.id) },
+                            onEditMemoClick = onEditMemoClick,
+                            onClearAllClick = onClearAllClick,
                         )
                     }
                 },
-                floatingActionButtonPosition = FabPosition.End,
             ) { paddingValues ->
                 MemoFeed(
                     memos = uiState.memos,
@@ -381,7 +363,6 @@ fun MemoScreenPreview_Default(
             onDialogRequested = {},
             onCategorySelected = {},
             onMemoClick = {},
-            onMemoEditorToggleButtonClick = {},
             onClearAllClick = {},
         )
     }
@@ -401,7 +382,6 @@ fun MemoScreenPreview_MemoEditorVisible(
                 memos = memos,
                 allLabels = setOf("label 3", "label 5"),
                 editorState = MemoUiState.EditorState(
-                    isVisible = true,
                     editTarget = Memo(
                         categoryId = 0L,
                         id = 0L,
@@ -427,7 +407,6 @@ fun MemoScreenPreview_MemoEditorVisible(
             onDialogRequested = {},
             onCategorySelected = {},
             onMemoClick = {},
-            onMemoEditorToggleButtonClick = {},
             onClearAllClick = {},
         )
     }
@@ -461,7 +440,6 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             onDialogRequested = {},
             onCategorySelected = {},
             onMemoClick = {},
-            onMemoEditorToggleButtonClick = {},
             onClearAllClick = {},
         )
     }

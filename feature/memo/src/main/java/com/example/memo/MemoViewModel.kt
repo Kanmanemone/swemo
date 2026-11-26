@@ -66,8 +66,6 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
                 initialValue = emptyList()
             )
 
-    private val isEditorVisible = MutableStateFlow(false)
-
     // 저장할 때 어느 메모(id, categoryId)에 쓸지. id가 0이면 새 메모. 내용(contents)은 editorTextState가 원본이다
     private val editTarget = MutableStateFlow<Memo?>(defaultEditTarget())
 
@@ -83,9 +81,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         categories,
         selectedCategory,
         memos,
-        isEditorVisible,
         editTarget
-    ) { categories, selectedCategory, memos, isEditorVisible, editTarget ->
+    ) { categories, selectedCategory, memos, editTarget ->
         MemoUiState(
             categories = categories,
             selectedCategory = selectedCategory,
@@ -97,7 +94,6 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
                     .toSet(),
             editorState =
                 MemoUiState.EditorState(
-                    isVisible = isEditorVisible,
                     editTarget = editTarget,
                     mode = editTarget.asEditorMode(),
                 )
@@ -190,11 +186,6 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     fun copyMemoToEditor(memo: Memo) {
         loadIntoEditor(memo)
-        isEditorVisible.value = true
-    }
-
-    fun toggleEditorVisibility() {
-        isEditorVisible.value = !isEditorVisible.value
     }
 
     fun clearEditor() {

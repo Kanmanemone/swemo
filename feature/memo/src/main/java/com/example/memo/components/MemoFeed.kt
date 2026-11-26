@@ -1,7 +1,6 @@
 package com.example.memo.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -42,7 +41,6 @@ internal fun MemoFeed(
         modifier = modifier,
         state = listState,
         reverseLayout = true,
-        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
         items(
             items = itemsInListOrder,

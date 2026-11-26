@@ -1,19 +1,14 @@
 package com.example.memo.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.EditorMode
 import com.example.model.Memo
@@ -31,27 +26,17 @@ internal fun MemoEditor(
     onClearAllClick: () -> Unit = {},
 ) {
     if (editTarget != null) {
-        Column(
+        MemoChatBar(
+            state = textState,
+            mode = mode,
             modifier = modifier
-                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
-        ) {
-            val textStyle = bulletedListTextStyle()
-            BulletedListTextField(
-                state = textState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 240.dp)
-                    .padding(vertical = 8.dp),
-                textStyle = textStyle,
-            )
-            MemoEditorActionBar(
-                mode = mode,
-                isClearAllEnabled = mode == EditorMode.Update || !textState.isBulletedListEmpty(),
-                onAddMemoClick = onAddMemoClick,
-                onEditMemoClick = onEditMemoClick,
-                onClearAllClick = onClearAllClick,
-            )
-        }
+                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
+            onSendClick = when (mode) {
+                EditorMode.Insert -> onAddMemoClick
+                EditorMode.Update -> onEditMemoClick
+            },
+            onClearAllClick = onClearAllClick,
+        )
     }
 }
 
