@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.example.designsystem.theme.SwemoTheme
@@ -29,6 +30,7 @@ internal fun MemoFeed(
     onMemoPositionsChange: (List<Long>) -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
 ) {
+    val focusManager = LocalFocusManager.current
     val dragState = remember { ReorderableState() }
     // 드래그 중에는 화면 순서를 여기서 바꾸고, 손을 뗄 때만 저장한다
     var itemsInListOrder by remember(memos) {
@@ -72,7 +74,10 @@ internal fun MemoFeed(
                             listState = listState,
                             onMove = { from, to -> itemsInListOrder = itemsInListOrder.moved(from, to) },
                             onDragEnd = { onMemoPositionsChange(itemsInListOrder.asReversed().map(Memo::id)) },
-                            onLongPress = { isMenuExpanded = true },
+                            onLongPress = {
+                                focusManager.clearFocus() // 입력란에 포커스가 남아 있으면 메뉴가 닫힐 때 키보드가 다시 뜬다
+                                isMenuExpanded = true
+                            },
                             onDragAway = { isMenuExpanded = false },
                             onClick = { onMemoClick(memo) },
                         ),

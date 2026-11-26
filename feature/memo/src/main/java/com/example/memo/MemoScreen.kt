@@ -25,14 +25,18 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -112,6 +116,19 @@ private fun MemoScreen(
     onClearAllClick: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+
+    val currentOnClearAllClick by rememberUpdatedState(onClearAllClick)
+
+    // 버튼이든 가로 드래그든 카테고리 서랍이 열리기 시작하면, 입력란 포커스를 풀고 지우기 버튼과 같이 에디터를 비운다
+    LaunchedEffect(drawerState) {
+        snapshotFlow { drawerState.targetValue }.collect {
+            if (it == DrawerValue.Open) {
+                focusManager.clearFocus()
+                currentOnClearAllClick()
+            }
+        }
+    }
 
     val selectedCategory = uiState.selectedCategory
     val editorState = uiState.editorState
