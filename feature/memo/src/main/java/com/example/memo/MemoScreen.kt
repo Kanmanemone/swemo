@@ -1,9 +1,14 @@
 package com.example.memo
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -38,13 +43,12 @@ import com.example.designsystem.theme.SwemoTheme
 import com.example.memo.components.AddCategoryDialog
 import com.example.memo.components.CategorySelector
 import com.example.memo.components.DeleteCategoryDialog
-import com.example.memo.components.MemoEditor
+import com.example.memo.components.MemoChatBar
 import com.example.memo.components.MemoFeed
 import com.example.memo.components.RenameCategoryDialog
 import com.example.model.Category
 import com.example.model.Memo
 import com.example.memo.components.bulletedListTextFieldState
-import com.example.model.MemoContent
 import com.example.ui.CategoryPreviewParameterProvider
 import com.example.ui.DevicePreviews
 import com.example.ui.MemoPreviewParameterProvider
@@ -111,7 +115,6 @@ private fun MemoScreen(
 
     val selectedCategory = uiState.selectedCategory
     val editorState = uiState.editorState
-    val editTarget = editorState.editTarget
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -199,15 +202,19 @@ private fun MemoScreen(
                 },
                 bottomBar = {
                     Surface {
-                        MemoEditor(
+                        MemoChatBar(
+                            state = editorTextState,
+                            mode = editorState.mode,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(8.dp),
-                            editTarget = editTarget,
-                            textState = editorTextState,
-                            mode = editorState.mode,
-                            onAddMemoClick = { onAddMemoClick(selectedCategory.id) },
-                            onEditMemoClick = onEditMemoClick,
+                                .padding(8.dp)
+                                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
+                            onSendClick = {
+                                when (editorState.mode) {
+                                    EditorMode.Insert -> onAddMemoClick(selectedCategory.id)
+                                    EditorMode.Update -> onEditMemoClick()
+                                }
+                            },
                             onClearAllClick = onClearAllClick,
                         )
                     }
@@ -370,7 +377,7 @@ fun MemoScreenPreview_Default(
 
 @DevicePreviews
 @Composable
-fun MemoScreenPreview_MemoEditorVisible(
+fun MemoScreenPreview_MemoChatBarFilled(
     @PreviewParameter(MemoPreviewParameterProvider::class)
     memos: List<Memo>,
 ) {
@@ -381,17 +388,6 @@ fun MemoScreenPreview_MemoEditorVisible(
                 selectedCategory = Category(id = 1L, name = "category 1"),
                 memos = memos,
                 allLabels = setOf("label 3", "label 5"),
-                editorState = MemoUiState.EditorState(
-                    editTarget = Memo(
-                        categoryId = 0L,
-                        id = 0L,
-                        contents = listOf(
-                            MemoContent(id = 0L, label = "label 3", text = "Fake memo 7"),
-                            MemoContent(id = -1L, label = "label 5", text = "Fake memo 7"),
-                            MemoContent(id = -2L, label = "label 7", text = "Fake memo 7"),
-                        )
-                    ),
-                )
             ),
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             dialogState = null,

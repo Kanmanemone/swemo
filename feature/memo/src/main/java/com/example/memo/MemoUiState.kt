@@ -11,7 +11,6 @@ data class MemoUiState(
     val editorState: EditorState = EditorState()
 ) {
     data class EditorState(
-        val editTarget: Memo? = null,
         val mode: EditorMode = EditorMode.Insert,
     )
 }

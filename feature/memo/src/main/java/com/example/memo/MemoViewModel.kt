@@ -67,10 +67,10 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
             )
 
     // 저장할 때 어느 메모(id, categoryId)에 쓸지. id가 0이면 새 메모. 내용(contents)은 editorTextState가 원본이다
-    private val editTarget = MutableStateFlow<Memo?>(defaultEditTarget())
+    private val editTarget = MutableStateFlow(defaultEditTarget())
 
     /**
-     * MemoEditor 입력란의 상태. 편집 중인 메모 내용의 원본이다.
+     * MemoChatBar 입력란의 상태. 편집 중인 메모 내용의 원본이다.
      *
      * - 저장할 때 이 텍스트를 한 번 MemoContent 목록으로 바꿔 [editTarget]에 담는다.
      */
@@ -94,7 +94,6 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
                     .toSet(),
             editorState =
                 MemoUiState.EditorState(
-                    editTarget = editTarget,
                     mode = editTarget.asEditorMode(),
                 )
         )
@@ -137,8 +136,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
     fun deleteCategory(categoryId: Long) {
         viewModelScope.launch {
             val deletedCategoryId = repository.deleteCategory(categoryId)
-            // 만약 MemoEditor에서 편집 중인 메모가 삭제한 카테고리에 속했다면, 해당 편집을 취소
-            if (deletedCategoryId == editTarget.value?.categoryId) {
+            // 만약 MemoChatBar에서 편집 중인 메모가 삭제한 카테고리에 속했다면, 해당 편집을 취소
+            if (deletedCategoryId == editTarget.value.categoryId) {
                 resetEditor()
             }
         }
@@ -146,7 +145,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     // Memo - C
     fun addMemo(categoryId: Long) {
-        val memo = editTarget.value ?: return
+        val memo = editTarget.value
         viewModelScope.launch {
             repository.insertMemo(memo.copy(categoryId = categoryId, contents = editorTextState.text.toMemoContents()))
             resetEditor()
@@ -155,7 +154,7 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
 
     // Memo - U
     fun updateMemo() {
-        val memo = editTarget.value ?: return
+        val memo = editTarget.value
         viewModelScope.launch {
             repository.updateMemo(memo.copy(contents = editorTextState.text.toMemoContents()))
             resetEditor()
@@ -172,8 +171,8 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
     fun deleteMemo(memoId: Long) {
         viewModelScope.launch {
             val deletedMemoId = repository.deleteMemo(memoId)
-            // 삭제한 메모가 만약 MemoEditor에서 편집 중인 메모였다면, 해당 편집을 취소
-            if (deletedMemoId == editTarget.value?.id) {
+            // 삭제한 메모가 만약 MemoChatBar에서 편집 중인 메모였다면, 해당 편집을 취소
+            if (deletedMemoId == editTarget.value.id) {
                 resetEditor()
             }
         }
@@ -227,5 +226,5 @@ private fun defaultEditTarget(): Memo =
     )
 
 // Memo.id가 1 이상이면 Database에 있는 Memo라는 의미이므로 Update 모드
-private fun Memo?.asEditorMode(): EditorMode =
-    if (this != null && id > 0L) EditorMode.Update else EditorMode.Insert
+private fun Memo.asEditorMode(): EditorMode =
+    if (id > 0L) EditorMode.Update else EditorMode.Insert
