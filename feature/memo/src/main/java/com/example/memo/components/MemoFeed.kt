@@ -1,6 +1,7 @@
 package com.example.memo.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -29,6 +30,7 @@ internal fun MemoFeed(
     onMemoDeleteClick: (Long) -> Unit = {},
     onMemoPositionsChange: (List<Long>) -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val focusManager = LocalFocusManager.current
     val dragState = remember { ReorderableState() }
@@ -43,6 +45,7 @@ internal fun MemoFeed(
         modifier = modifier,
         state = listState,
         reverseLayout = true,
+        contentPadding = contentPadding,
     ) {
         items(
             items = itemsInListOrder,
@@ -54,7 +57,7 @@ internal fun MemoFeed(
                 // 간격을 항목에 포함해야 자리 이동 애니메이션이 카드와 함께 움직인다 (reverseLayout이라 아래쪽)
                 modifier = Modifier
                     .draggedItem(this, dragState, memo.id, listState)
-                    .padding(bottom = 4.dp),
+                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp),
             ) {
                 MemoCard(
                     memo = memo,

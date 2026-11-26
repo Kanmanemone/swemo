@@ -1,9 +1,14 @@
 package com.example.memo
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -155,9 +160,11 @@ private fun MemoScreen(
         }
     ) {
         if (selectedCategory == null) {
-            Scaffold {
+            Scaffold { paddingValues ->
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     Button(
@@ -217,7 +224,8 @@ private fun MemoScreen(
                             mode = editorState.mode,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(8.dp),
+                                .padding(8.dp)
+                                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
                             onSendClick = {
                                 when (editorState.mode) {
                                     EditorMode.Insert -> onAddMemoClick(selectedCategory.id)
@@ -228,10 +236,11 @@ private fun MemoScreen(
                         )
                     }
                 },
-            ) {
+            ) { paddingValues ->
                 MemoFeed(
                     memos = uiState.memos,
                     modifier = Modifier.fillMaxSize(),
+                    contentPadding = paddingValues, // 목록이 bar 밑까지 깔리고, 맨 처음·끝 항목만 bar를 비켜 선다
                     onMemoClick = onMemoClick,
                     onMemoDeleteClick = onDeleteMemoClick,
                     onMemoPositionsChange = onMemoPositionsChange,
