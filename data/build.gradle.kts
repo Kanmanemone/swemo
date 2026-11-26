@@ -46,5 +46,6 @@ dependencies {
 
     // Module
     implementation(projects.database)
+    implementation(projects.datastore)
     implementation(projects.model)
 }

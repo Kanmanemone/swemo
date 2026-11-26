@@ -2,6 +2,8 @@ package com.example.data.di
 
 import com.example.data.MemoRepository
 import com.example.data.MemoRepositoryImpl
+import com.example.data.UserDataRepository
+import com.example.data.UserDataRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -17,4 +19,10 @@ abstract class DataModule {
     abstract fun bindMemoRepository(
         memoRepositoryImpl: MemoRepositoryImpl
     ): MemoRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserDataRepository(
+        userDataRepositoryImpl: UserDataRepositoryImpl
+    ): UserDataRepository
 }

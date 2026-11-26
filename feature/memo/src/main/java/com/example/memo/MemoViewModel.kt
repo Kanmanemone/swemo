@@ -3,6 +3,7 @@ package com.example.memo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.MemoRepository
+import com.example.data.UserDataRepository
 import com.example.model.Category
 import com.example.model.Memo
 import androidx.compose.foundation.text.input.TextFieldState
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -25,7 +27,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MemoViewModel @Inject constructor(private val repository: MemoRepository) : ViewModel() {
+class MemoViewModel @Inject constructor(
+    private val repository: MemoRepository,
+    private val userDataRepository: UserDataRepository,
+) : ViewModel() {
 
     private val categories: StateFlow<List<Category>> =
         repository
@@ -41,8 +46,10 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
     private val selectedCategory: StateFlow<Category?> = combine(
         categories,
         selectedCategoryId,
-        ::determineCategory
-    ).stateIn(
+        userDataRepository.lastSelectedCategoryId, // 저장값을 읽기 전엔 combine이 값을 내지 않아, 그동안은 로딩으로 남는다
+    ) { categories, selectedCategoryId, savedCategoryId ->
+        determineCategory(categories, selectedCategoryId ?: savedCategoryId)
+    }.stateIn(
         scope = viewModelScope,
         started = SharingPolicy,
         initialValue = null
@@ -75,6 +82,13 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
      * - 저장할 때 이 텍스트를 한 번 MemoContent 목록으로 바꿔 [editTarget]에 담는다.
      */
     internal val editorTextState: TextFieldState = bulletedListTextFieldState()
+
+    // 마지막으로 연 카테고리를 기억: 선택이 바뀔 때마다 저장한다
+    init {
+        viewModelScope.launch {
+            selectedCategoryId.filterNotNull().collect(userDataRepository::setLastSelectedCategoryId)
+        }
+    }
 
     // states
     val uiState: StateFlow<MemoUiState> = combine(
