@@ -63,9 +63,10 @@ internal class ReorderableState {
         val draggingItem = layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return
         val start = startOffset + dragDelta
         val end = start + draggingItem.size
+        // 가장자리는 contentPadding 안쪽이다. viewport는 bar 밑까지 깔려 있어서, 그 끝을 쓰면 bar에 가려진 뒤에야 스크롤된다
         val overscroll = when {
-            dragDelta > 0 -> (end - layoutInfo.viewportEndOffset).coerceAtLeast(0f)
-            dragDelta < 0 -> (start - layoutInfo.viewportStartOffset).coerceAtMost(0f)
+            dragDelta > 0 -> (end - (layoutInfo.viewportEndOffset - layoutInfo.afterContentPadding)).coerceAtLeast(0f)
+            dragDelta < 0 -> (start - (layoutInfo.viewportStartOffset + layoutInfo.beforeContentPadding)).coerceAtMost(0f)
             else -> 0f
         }
         // 공식 데모의 scrollBy(코루틴)와 달리 즉시 적용돼, 바로 뒤 reorder()가 스크롤된 배치를 읽는다
