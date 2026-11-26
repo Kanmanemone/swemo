@@ -30,6 +30,9 @@ object SwemoIcons {
     val Delete: ImageVector
         @Composable get() = ImageVector.vectorResource(id = R.drawable.delete_24dp_5f6368_fill0_wght400_grad0_opsz24)
 
+    val DriveFileMove: ImageVector
+        @Composable get() = ImageVector.vectorResource(id = R.drawable.drive_file_move_24dp_5f6368_fill0_wght400_grad0_opsz24)
+
     val ClearAll: ImageVector
         @Composable get() = ImageVector.vectorResource(id = R.drawable.clear_all_24dp_5f6368_fill0_wght400_grad0_opsz24)
 }

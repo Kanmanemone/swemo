@@ -36,6 +36,12 @@ interface MemoDao {
         insertMemoContents(memo.asMemoContentEntities(memo.id))
     }
 
+    // 옮긴 카테고리의 맨 끝에 둔다. 원래 position을 그대로 두면 새 카테고리의 다른 메모 사이에 끼어든다
+    @Transaction
+    suspend fun updateMemoCategory(memoId: Long, categoryId: Long) {
+        updateMemoCategoryAndPosition(memoId, categoryId, getNextMemoPosition(categoryId))
+    }
+
     @Transaction
     suspend fun deletePopulatedMemo(memoId: Long): Long? {
         deleteMemoContentsByMemoId(memoId)
@@ -63,6 +69,9 @@ interface MemoDao {
 
     @Query("UPDATE memos SET categoryId = :categoryId WHERE id = :memoId")
     suspend fun updateMemo(memoId: Long, categoryId: Long)
+
+    @Query("UPDATE memos SET categoryId = :categoryId, position = :position WHERE id = :memoId")
+    suspend fun updateMemoCategoryAndPosition(memoId: Long, categoryId: Long, position: Int)
 
     @Query("UPDATE memos SET position = :position WHERE id = :memoId")
     suspend fun updateMemoPosition(memoId: Long, position: Int)

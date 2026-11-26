@@ -16,6 +16,7 @@ interface MemoRepository {
     suspend fun updateCategoryName(categoryId: Long, name: String)
     suspend fun updateCategoryPositions(categoryIdsInOrder: List<Long>)
     suspend fun updateMemo(memo: Memo)
+    suspend fun updateMemoCategory(memoId: Long, categoryId: Long)
     suspend fun updateMemoPositions(memoIdsInOrder: List<Long>)
     suspend fun deleteCategory(categoryId: Long): Long?
     suspend fun deleteMemo(memoId: Long): Long?

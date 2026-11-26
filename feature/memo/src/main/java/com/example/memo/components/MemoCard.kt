@@ -36,6 +36,7 @@ internal fun MemoCard(
     modifier: Modifier = Modifier,
     isMenuExpanded: Boolean = false,
     onMenuExpandedChange: (Boolean) -> Unit = {},
+    onMoveCategoryClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
 ) {
     // TextFieldState는 생성 후 memo.contents가 바뀌어도 텍스트를 자동으로 갱신하지 않는다.
@@ -67,6 +68,13 @@ internal fun MemoCard(
                 expanded = isMenuExpanded,
                 onDismissRequest = { onMenuExpandedChange(false) },
             ) {
+                DropdownMenuItem(
+                    text = { Text("카테고리 이동") },
+                    onClick = {
+                        onMenuExpandedChange(false)
+                        onMoveCategoryClick()
+                    },
+                )
                 DropdownMenuItem(
                     text = { Text("메모 제거") },
                     onClick = {

@@ -112,6 +112,14 @@ class FakeMemoRepositoryImpl @Inject constructor() : MemoRepository {
         }
     }
 
+    override suspend fun updateMemoCategory(memoId: Long, categoryId: Long) {
+        // 옮긴 카테고리의 맨 끝에 둔다 (MemoDao.updateMemoCategory와 같음)
+        memosFlow.update { memos ->
+            val target = memos.firstOrNull { it.id == memoId } ?: return@update memos
+            memos.filterNot { it.id == memoId } + target.copy(categoryId = categoryId)
+        }
+    }
+
     override suspend fun updateMemoPositions(memoIdsInOrder: List<Long>) {
         memosFlow.update { memos ->
             memos.reordered(memoIdsInOrder, Memo::id)

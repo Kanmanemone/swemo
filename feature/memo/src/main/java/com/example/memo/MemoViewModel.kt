@@ -161,6 +161,16 @@ class MemoViewModel @Inject constructor(private val repository: MemoRepository) 
         }
     }
 
+    fun moveMemo(memoId: Long, categoryId: Long) {
+        viewModelScope.launch {
+            repository.updateMemoCategory(memoId, categoryId)
+            // 옮긴 메모가 만약 MemoChatBar에서 편집 중인 메모였다면, 해당 편집을 취소 (그대로 저장하면 원래 카테고리로 되돌아간다)
+            if (memoId == editTarget.value.id) {
+                resetEditor()
+            }
+        }
+    }
+
     fun updateMemoPositions(memoIdsInOrder: List<Long>) {
         viewModelScope.launch {
             repository.updateMemoPositions(memoIdsInOrder)

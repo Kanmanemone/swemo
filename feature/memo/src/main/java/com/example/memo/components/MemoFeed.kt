@@ -27,6 +27,7 @@ internal fun MemoFeed(
     memos: List<Memo>,
     modifier: Modifier = Modifier,
     onMemoClick: (Memo) -> Unit = {},
+    onMemoMoveCategoryClick: (Memo) -> Unit = {},
     onMemoDeleteClick: (Long) -> Unit = {},
     onMemoPositionsChange: (List<Long>) -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
@@ -63,6 +64,7 @@ internal fun MemoFeed(
                     memo = memo,
                     isMenuExpanded = isMenuExpanded,
                     onMenuExpandedChange = { isMenuExpanded = it },
+                    onMoveCategoryClick = { onMemoMoveCategoryClick(memo) },
                     onDeleteClick = { onMemoDeleteClick(memo.id) },
                 )
 

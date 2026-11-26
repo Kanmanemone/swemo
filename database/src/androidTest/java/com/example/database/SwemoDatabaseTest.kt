@@ -90,6 +90,33 @@ class SwemoDatabaseTest {
         )
     }
 
+    @Test
+    fun memoDao_updateMemoCategory_appendsToTargetCategory() = runBlocking {
+        database = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext<Context>(),
+            SwemoDatabase::class.java,
+        ).build()
+        val categoryDao = database!!.categoryDao()
+        val memoDao = database!!.memoDao()
+
+        val fromCategoryId = categoryDao.insertCategory(CategoryEntity(name = "from"))
+        val toCategoryId = categoryDao.insertCategory(CategoryEntity(name = "to"))
+        val movingMemoId = memoDao.insertPopulatedMemo(Memo(categoryId = fromCategoryId, id = 0L))
+        val firstMemoId = memoDao.insertPopulatedMemo(Memo(categoryId = toCategoryId, id = 0L))
+        val secondMemoId = memoDao.insertPopulatedMemo(Memo(categoryId = toCategoryId, id = 0L))
+
+        memoDao.updateMemoCategory(movingMemoId, toCategoryId)
+
+        assertEquals(
+            emptyList<Long>(),
+            memoDao.getPopulatedMemosByCategoryId(fromCategoryId).first().map { it.entity.id },
+        )
+        assertEquals(
+            listOf(firstMemoId, secondMemoId, movingMemoId),
+            memoDao.getPopulatedMemosByCategoryId(toCategoryId).first().map { it.entity.id },
+        )
+    }
+
     private companion object {
         const val TEST_DATABASE = "migration-test"
     }

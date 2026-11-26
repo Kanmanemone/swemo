@@ -49,6 +49,7 @@ import com.example.memo.components.CategorySelector
 import com.example.memo.components.DeleteCategoryDialog
 import com.example.memo.components.MemoChatBar
 import com.example.memo.components.MemoFeed
+import com.example.memo.components.MoveMemoDialog
 import com.example.memo.components.RenameCategoryDialog
 import com.example.model.Category
 import com.example.model.Memo
@@ -82,6 +83,7 @@ fun MemoScreen(
         /* Category - D */ onDeleteCategoryClick = viewModel::deleteCategory,
         /* Memo - C */ onAddMemoClick = viewModel::addMemo,
         /* Memo - U */ onEditMemoClick = viewModel::updateMemo,
+        /* Memo - U */ onMoveMemoClick = viewModel::moveMemo,
         /* Memo - U */ onMemoPositionsChange = viewModel::updateMemoPositions,
         /* Memo - D */ onDeleteMemoClick = viewModel::deleteMemo,
         // event - etc
@@ -107,6 +109,7 @@ private fun MemoScreen(
     /* Category - D */ onDeleteCategoryClick: (Long) -> Unit,
     /* Memo - C */ onAddMemoClick: (Long) -> Unit,
     /* Memo - U */ onEditMemoClick: () -> Unit,
+    /* Memo - U */ onMoveMemoClick: (Long, Long) -> Unit,
     /* Memo - U */ onMemoPositionsChange: (List<Long>) -> Unit,
     /* Memo - D */ onDeleteMemoClick: (Long) -> Unit,
     // event - etc
@@ -242,6 +245,9 @@ private fun MemoScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = paddingValues, // 목록이 bar 밑까지 깔리고, 맨 처음·끝 항목만 bar를 비켜 선다
                     onMemoClick = onMemoClick,
+                    onMemoMoveCategoryClick = { memo ->
+                        onDialogRequested(MemoScreenDialog.MemoMove(memoId = memo.id, categoryId = memo.categoryId))
+                    },
                     onMemoDeleteClick = onDeleteMemoClick,
                     onMemoPositionsChange = onMemoPositionsChange,
                 )
@@ -250,10 +256,12 @@ private fun MemoScreen(
 
         MemoScreenDialogHost(
             dialogState = dialogState,
+            categories = uiState.categories,
             onDialogRequested = onDialogRequested,
             onAddCategoryClick = onAddCategoryClick,
             onRenameCategoryClick = onRenameCategoryClick,
             onDeleteCategoryClick = onDeleteCategoryClick,
+            onMoveMemoClick = onMoveMemoClick,
         )
     }
 }
@@ -308,10 +316,12 @@ private fun MemoScreenCategoryMenu(
 @Composable
 private fun MemoScreenDialogHost(
     dialogState: MemoScreenDialog?,
+    categories: List<Category>,
     onDialogRequested: (MemoScreenDialog?) -> Unit,
     onAddCategoryClick: (String) -> Unit,
     onRenameCategoryClick: (Long, String) -> Unit,
     onDeleteCategoryClick: (Long) -> Unit,
+    onMoveMemoClick: (Long, Long) -> Unit,
 ) {
     when (dialogState) {
         MemoScreenDialog.CategoryAdd ->
@@ -343,6 +353,17 @@ private fun MemoScreenDialogHost(
                 },
             )
 
+        is MemoScreenDialog.MemoMove ->
+            MoveMemoDialog(
+                currentCategoryName = categories.firstOrNull { it.id == dialogState.categoryId }?.name.orEmpty(),
+                categories = categories.filterNot { it.id == dialogState.categoryId },
+                onDismissRequest = { onDialogRequested(null) },
+                onConfirmation = { categoryId ->
+                    onMoveMemoClick(dialogState.memoId, categoryId)
+                    onDialogRequested(null)
+                },
+            )
+
         null -> Unit
     }
 }
@@ -355,6 +376,8 @@ private sealed interface MemoScreenDialog : Serializable {
     data class CategoryRename(val categoryId: Long, val categoryName: String) : MemoScreenDialog
 
     data class CategoryDelete(val categoryId: Long, val categoryName: String) : MemoScreenDialog
+
+    data class MemoMove(val memoId: Long, val categoryId: Long) : MemoScreenDialog
 
 }
 
@@ -381,6 +404,7 @@ fun MemoScreenPreview_Default(
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMoveMemoClick = { _, _ -> },
             onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
@@ -414,6 +438,7 @@ fun MemoScreenPreview_MemoChatBarFilled(
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMoveMemoClick = { _, _ -> },
             onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
@@ -447,6 +472,7 @@ fun MemoScreenPreview_AddCategoryDialogVisible(
             onDeleteCategoryClick = {},
             onAddMemoClick = {},
             onEditMemoClick = {},
+            onMoveMemoClick = { _, _ -> },
             onMemoPositionsChange = {},
             onDeleteMemoClick = {},
             onDialogRequested = {},
