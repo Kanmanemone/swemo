@@ -25,6 +25,7 @@ import com.example.ui.MemoPreviewParameterProvider
 @Composable
 internal fun MemoFeed(
     memos: List<Memo>,
+    editingMemoId: Long? = null,
     modifier: Modifier = Modifier,
     onMemoClick: (Memo) -> Unit = {},
     onMemoMoveCategoryClick: (Memo) -> Unit = {},
@@ -62,6 +63,7 @@ internal fun MemoFeed(
             ) {
                 MemoCard(
                     memo = memo,
+                    isEditing = memo.id == editingMemoId,
                     isMenuExpanded = isMenuExpanded,
                     onMenuExpandedChange = { isMenuExpanded = it },
                     onMoveCategoryClick = { onMemoMoveCategoryClick(memo) },

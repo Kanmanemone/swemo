@@ -1,5 +1,6 @@
 package com.example.memo.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,7 @@ internal val MemoCardShape: Shape
 internal fun MemoCard(
     memo: Memo,
     modifier: Modifier = Modifier,
+    isEditing: Boolean = false,
     isMenuExpanded: Boolean = false,
     onMenuExpandedChange: (Boolean) -> Unit = {},
     onMoveCategoryClick: () -> Unit = {},
@@ -48,6 +50,7 @@ internal fun MemoCard(
             modifier = Modifier.fillMaxWidth(),
             shape = MemoCardShape,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            border = if (isEditing) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         ) {
             BulletedListTextField(
                 state = state,

@@ -244,6 +244,7 @@ private fun MemoScreen(
             ) { paddingValues ->
                 MemoFeed(
                     memos = uiState.memos,
+                    editingMemoId = editorState.memoId,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = paddingValues, // 목록이 bar 밑까지 깔리고, 맨 처음·끝 항목만 bar를 비켜 선다
                     onMemoClick = onMemoClick,

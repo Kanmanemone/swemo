@@ -115,6 +115,7 @@ class MemoViewModel @Inject constructor(
             editorState =
                 MemoUiState.EditorState(
                     mode = editTarget.asEditorMode(),
+                    memoId = editTarget.id.takeIf { it > 0L },
                 )
         )
     }.stateIn(

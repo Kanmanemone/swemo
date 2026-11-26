@@ -13,6 +13,7 @@ data class MemoUiState(
 ) {
     data class EditorState(
         val mode: EditorMode = EditorMode.Insert,
+        val memoId: Long? = null,
     )
 }
 
