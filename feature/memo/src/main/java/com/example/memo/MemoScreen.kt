@@ -1,14 +1,9 @@
 package com.example.memo
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -162,9 +157,7 @@ private fun MemoScreen(
         if (selectedCategory == null) {
             Scaffold {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(it),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Button(
@@ -224,8 +217,7 @@ private fun MemoScreen(
                             mode = editorState.mode,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(8.dp)
-                                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
+                                .padding(8.dp),
                             onSendClick = {
                                 when (editorState.mode) {
                                     EditorMode.Insert -> onAddMemoClick(selectedCategory.id)
@@ -236,12 +228,10 @@ private fun MemoScreen(
                         )
                     }
                 },
-            ) { paddingValues ->
+            ) {
                 MemoFeed(
                     memos = uiState.memos,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize(),
                     onMemoClick = onMemoClick,
                     onMemoDeleteClick = onDeleteMemoClick,
                     onMemoPositionsChange = onMemoPositionsChange,
