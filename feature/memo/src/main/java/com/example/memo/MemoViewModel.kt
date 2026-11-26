@@ -32,19 +32,20 @@ class MemoViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
 ) : ViewModel() {
 
-    private val categories: StateFlow<List<Category>> =
+    // null 값 = 아직 DB에 요청한 정보가 전달되지 않은 상태
+    private val categories: StateFlow<List<Category>?> =
         repository
             .getCategories()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingPolicy,
-                initialValue = emptyList()
+                initialValue = null
             )
 
     private val selectedCategoryId = MutableStateFlow<Long?>(null)
 
     private val selectedCategory: StateFlow<Category?> = combine(
-        categories,
+        categories.filterNotNull(),
         selectedCategoryId,
         userDataRepository.lastSelectedCategoryId, // 저장값을 읽기 전엔 combine이 값을 내지 않아, 그동안은 로딩으로 남는다
     ) { categories, selectedCategoryId, savedCategoryId ->
@@ -97,8 +98,13 @@ class MemoViewModel @Inject constructor(
         memos,
         editTarget
     ) { categories, selectedCategory, memos, editTarget ->
+        val isCategoryListLoaded = categories != null
+        val hasNoCategory = isCategoryListLoaded && categories.isEmpty()
+
         MemoUiState(
-            categories = categories,
+            // 보여 줄 카테고리가 아직 없고, "카테고리가 하나도 없음"도 확인되지 않았으면 로딩 중
+            isLoading = selectedCategory == null && !hasNoCategory,
+            categories = categories.orEmpty(),
             selectedCategory = selectedCategory,
             memos = memos,
             allLabels =
@@ -114,7 +120,7 @@ class MemoViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingPolicy,
-        initialValue = MemoUiState()
+        initialValue = MemoUiState(isLoading = true)
     )
 
     // events - crud

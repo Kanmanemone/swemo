@@ -162,7 +162,9 @@ private fun MemoScreen(
             )
         }
     ) {
-        if (selectedCategory == null) {
+        if (uiState.isLoading) {
+            // 카테고리를 아직 읽는 중이라, 어느 화면을 보여 줄지 아직 모른다. 그래서 일단은 비워 두기로 한다
+        } else if (selectedCategory == null) {
             Scaffold { paddingValues ->
                 Box(
                     modifier = Modifier
